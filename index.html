@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Mapa ambiental interativo da Região Metropolitana de Belém.">
+  <title>WebGIS Ambiental</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --ink: #17352b; --muted: #527166; --green: #1d7a4d; --panel: #f7fbf8; --line: #d5e5da; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); font-family: system-ui, sans-serif; }
+    #app { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+    aside { padding: 24px; background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; z-index: 500; }
+    h1 { margin: 0 0 8px; font-size: 1.45rem; }
+    .subtitle { margin: 0 0 20px; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+    .summary { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 14px; background: white; border: 1px solid var(--line); border-radius: 10px; font-size: .88rem; }
+    .layer { margin: 12px 0; padding: 14px; background: white; border: 1px solid var(--line); border-radius: 10px; }
+    .layer-header { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .layer-name { font-weight: 650; }
+    .count { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+    .actions { display: flex; gap: 8px; }
+    button { margin-top: 10px; border: 0; border-radius: 6px; padding: 8px 10px; color: white; background: var(--green); cursor: pointer; }
+    button.secondary { color: var(--ink); background: #e4f0e8; }
+    button:disabled { opacity: .5; cursor: wait; }
+    .status { margin: 14px 0 0; color: var(--muted); font-size: .8rem; }
+    .error { margin-top: 18px; padding: 10px; color: #8b1e1e; background: #ffe8e8; border-radius: 6px; font-size: .85rem; }
+    #map { min-height: 100vh; }
+    @media (max-width: 720px) { #app { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid var(--line); } #map { min-height: 65vh; } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside>
+      <h1>WebGIS Ambiental</h1>
+      <p class="subtitle">Áreas protegidas, corredores ecológicos e pontos ambientais da Região Metropolitana de Belém.</p>
+      <div class="summary"><span>Feições visíveis</span><strong>{{ visibleCount }}</strong></div>
+      <div v-for="layer in layers" :key="layer.key" class="layer">
+        <div class="layer-header">
+          <label class="layer-name">
+            <input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading">
+            {{ layer.label }}
+          </label>
+          <span class="count">{{ layer.count }} feições</span>
+        </div>
+        <div class="actions">
+          <button @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !layer.count">Enquadrar</button>
+          <button class="secondary" @click="clearLayer(layer)" :disabled="!layer.leafletLayer">Limpar</button>
+        </div>
+      </div>
+      <p class="status" role="status">{{ status }}</p>
+      <div v-if="error" class="error" role="alert">{{ error }}</div>
+    </aside>
+    <main id="map" aria-label="Mapa interativo"></main>
+  </div>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const escapeHtml = (value) => String(value ?? 'não informado')
+      .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+
+    createApp({
+      data() {
+        return {
+          map: null, error: '', status: 'Selecione uma camada para começar.',
+          layers: [
+            { key: 'poligonos', label: 'Áreas protegidas', color: '#198754', active: false, loading: false, count: 0, leafletLayer: null },
+            { key: 'linhas', label: 'Corredores ecológicos', color: '#0d6efd', active: false, loading: false, count: 0, leafletLayer: null },
+            { key: 'pontos', label: 'Pontos ambientais', color: '#dc3545', active: false, loading: false, count: 0, leafletLayer: null }
+          ]
+        };
+      },
+      computed: {
+        visibleCount() { return this.layers.filter(layer => layer.active).reduce((total, layer) => total + layer.count, 0); }
+      },
+      mounted() {
+        this.map = L.map('map').setView([-1.38, -48.45], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(this.map);
+      },
+      methods: {
+        async toggleLayer(layer) {
+          this.error = '';
+          if (!layer.active) { this.clearLayer(layer); return; }
+          layer.loading = true;
+          this.status = `Carregando ${layer.label.toLowerCase()}...`;
+          try {
+            const response = await fetch(`data/${layer.key}.geojson`);
+            if (!response.ok) throw new Error(`arquivo não encontrado (HTTP ${response.status})`);
+            const geojson = await response.json();
+            layer.count = geojson.features.length;
+            layer.leafletLayer = L.geoJSON(geojson, {
+              style: () => ({ color: layer.color, fillColor: layer.color, weight: 3, fillOpacity: .25 }),
+              pointToLayer: (_, latlng) => L.circleMarker(latlng, {
+                radius: 8, color: layer.color, fillColor: layer.color, fillOpacity: .85
+              }),
+              onEachFeature: (feature, leafletFeature) => {
+                const properties = feature.properties || {};
+                const content = Object.entries(properties).filter(([key]) => key !== 'id')
+                  .map(([key, value]) => `<strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}<br>`).join('');
+                leafletFeature.bindPopup(content || 'Sem atributos disponíveis.');
+              }
+            }).addTo(this.map);
+            this.status = `${layer.count} feição(ões) carregada(s).`;
+          } catch (loadError) {
+            layer.active = false;
+            this.error = `Erro ao carregar ${layer.label.toLowerCase()}: ${loadError.message}`;
+            this.status = 'Não foi possível carregar a camada.';
+          } finally { layer.loading = false; }
+        },
+        clearLayer(layer) {
+          if (layer.leafletLayer) this.map.removeLayer(layer.leafletLayer);
+          layer.leafletLayer = null; layer.active = false; layer.count = 0;
+        },
+        fitLayer(layer) {
+          if (layer.leafletLayer) this.map.fitBounds(layer.leafletLayer.getBounds(), { padding: [24, 24] });
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

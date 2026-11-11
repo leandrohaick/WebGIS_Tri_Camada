@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "nome": "Parque Ambiental de Ananindeua",
+        "categoria": "Parque urbano",
+        "area_km2": 1.85,
+        "descricao": "Área demonstrativa para validação do WebGIS."
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [[[[-48.39, -1.365], [-48.375, -1.365], [-48.375, -1.35], [-48.39, -1.35], [-48.39, -1.365]]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "nome": "Área de Proteção do Igarapé Maguari",
+        "categoria": "Proteção de margem",
+        "area_km2": 3.4,
+        "descricao": "Faixa de proteção ambiental do igarapé."
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [[[[-48.475, -1.33], [-48.45, -1.33], [-48.45, -1.31], [-48.475, -1.31], [-48.475, -1.33]]]]
+      }
+    }
+  ]
+}

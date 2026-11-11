@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "nome": "Ponto de coleta seletiva Cidade Nova",
+        "categoria": "Coleta seletiva",
+        "responsavel": "Prefeitura de Ananindeua",
+        "descricao": "Local demonstrativo de entrega voluntária."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-48.395, -1.365]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "nome": "Viveiro municipal",
+        "categoria": "Reflorestamento",
+        "responsavel": "Secretaria de Meio Ambiente",
+        "descricao": "Produção de mudas nativas."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-48.415, -1.35]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "nome": "Estação de monitoramento do ar",
+        "categoria": "Monitoramento",
+        "responsavel": "UFPA",
+        "descricao": "Ponto demonstrativo de monitoramento ambiental."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-48.455, -1.325]
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "nome": "Corredor Guajará-Maguari",
+        "categoria": "Conexão hídrica",
+        "extensao_km": 8.2,
+        "descricao": "Traçado demonstrativo para a camada de linhas."
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [[[-48.5, -1.3], [-48.48, -1.315], [-48.455, -1.33], [-48.43, -1.35]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "nome": "Ciclorrota Verde Metropolitana",
+        "categoria": "Mobilidade sustentável",
+        "extensao_km": 5.7,
+        "descricao": "Rota demonstrativa de mobilidade não motorizada."
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [[[-48.42, -1.39], [-48.405, -1.375], [-48.39, -1.36], [-48.37, -1.345]]]
+      }
+    }
+  ]
+}
