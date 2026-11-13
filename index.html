@@ -24,6 +24,7 @@
     .layer-header { display:flex; justify-content:space-between; gap:8px; align-items:center; }
     .layer-name { font-weight:650; } .count { color:var(--muted); font-size:.78rem; white-space:nowrap; }
     .swatch { display:inline-block; width:10px; height:10px; margin-right:5px; border-radius:50%; }
+    .layer-list { display:grid; grid-template-columns:1fr 1fr; gap:0 10px; }
     .layer-actions { display:flex; gap:5px; align-items:center; margin-top:5px; }
     input[type="search"],input[type="number"],select { width:100%; padding:6px; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:5px; font-size:.75rem; }
     input[type="range"] { width:90px; accent-color:var(--green); } label { font-size:.82rem; }
@@ -34,7 +35,15 @@
     .status { margin:8px 0 0; color:var(--muted); font-size:.68rem; } .error { margin-top:8px; padding:7px; color:#8b1e1e; background:#ffe8e8; border-radius:5px; font-size:.72rem; }
     .table-wrap { max-height:105px; overflow:hidden; border:1px solid var(--line); border-radius:5px; }
     table { width:100%; border-collapse:collapse; font-size:.62rem; } th,td { padding:4px; text-align:left; border-bottom:1px solid #e8f0eb; } th { position:sticky; top:0; background:#edf6f0; }
-    #map { width:100%; height:100vh; min-height:0; } .leaflet-control-layers { font-size:.75rem; }
+    #map { position:relative; width:100%; height:100vh; min-height:0; } .leaflet-control-layers { font-size:.75rem; }
+    .inspector { position:absolute; top:18px; right:18px; z-index:450; width:325px; padding:17px; color:#f5fff8; background:rgba(15,45,35,.95); border:1px solid rgba(255,255,255,.2); border-radius:14px; box-shadow:0 12px 35px rgba(10,35,25,.25); }
+    .inspector-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .inspector-kicker { margin:0 0 4px; color:#8de0ae; font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+    .inspector h2 { margin:0; color:#fff; font-size:1.05rem; line-height:1.2; } .inspector-close { padding:2px 7px; color:#d5f3df; background:transparent; font-size:1.2rem; }
+    .inspector-category { display:inline-block; margin:9px 0 12px; padding:4px 8px; color:#123d29; background:#8de0ae; border-radius:20px; font-size:.7rem; font-weight:700; }
+    .attribute-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .attribute { padding:8px; background:rgba(255,255,255,.09); border-radius:7px; } .attribute small { display:block; color:#a9cdb7; font-size:.62rem; text-transform:uppercase; } .attribute strong { display:block; margin-top:2px; color:#fff; font-size:.76rem; line-height:1.25; overflow-wrap:anywhere; }
+    .inspector-description { margin:12px 0 0; padding-top:10px; color:#d7eee0; border-top:1px solid rgba(255,255,255,.15); font-size:.75rem; line-height:1.4; }
     @media (max-width:760px) { #app { grid-template-columns:280px 1fr; } aside { padding:10px; } h1 { font-size:1rem; } }
   </style>
 </head>
@@ -58,15 +67,17 @@
 
       <div class="section">
         <h2>Camadas vetoriais</h2>
-        <div v-for="layer in layers" :key="layer.key" class="layer">
-          <div class="layer-header">
-            <label class="layer-name"><input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading">
-              <span class="swatch" :style="{background: layer.color}"></span>{{ layer.label }}</label>
-            <span class="count">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
-          </div>
-          <div class="layer-actions">
-            <button class="secondary" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !layer.count">Enquadrar</button>
-            <label title="Opacidade">Opacidade <input type="range" min="0.15" max="1" step="0.05" v-model="layer.opacity" @input="updateOpacity(layer)"></label>
+        <div class="layer-list">
+          <div v-for="layer in layers" :key="layer.key" class="layer">
+            <div class="layer-header">
+              <label class="layer-name"><input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading">
+                <span class="swatch" :style="{background: layer.color}"></span>{{ layer.label }}</label>
+              <span class="count">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
+            </div>
+            <div class="layer-actions">
+              <button class="secondary" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !layer.count">Enquadrar</button>
+              <label title="Opacidade">Opacidade <input type="range" min="0.15" max="1" step="0.05" v-model="layer.opacity" @input="updateOpacity(layer)"></label>
+            </div>
           </div>
         </div>
         <div class="button-row">
@@ -90,19 +101,23 @@
         </div>
       </div>
 
-      <div class="section" v-if="selectedLayer">
-        <h2>Atributos: {{ selectedLayer.label }}</h2>
-        <div class="table-wrap">
-          <table><thead><tr><th v-for="column in columns(selectedLayer)" :key="column">{{ column }}</th></tr></thead>
-            <tbody><tr v-for="feature in filteredFeatures(selectedLayer)" :key="feature.properties.id">
-              <td v-for="column in columns(selectedLayer)" :key="column">{{ formatValue(feature.properties[column]) }}</td>
-            </tr><tr v-if="!filteredFeatures(selectedLayer).length"><td :colspan="columns(selectedLayer).length">Nenhum resultado.</td></tr></tbody>
-          </table>
-        </div>
-      </div>
       <p class="status" role="status">{{ status }}</p><div v-if="error" class="error" role="alert">{{ error }}</div>
     </aside>
-    <main id="map" aria-label="Mapa interativo"></main>
+    <main id="map" aria-label="Mapa interativo">
+      <section v-if="selectedFeature" class="inspector" aria-live="polite">
+        <div class="inspector-top">
+          <div><p class="inspector-kicker">{{ selectedFeature.layerLabel }}</p><h2>{{ selectedFeature.properties.nome || 'Feição selecionada' }}</h2></div>
+          <button class="inspector-close" @click="selectedFeature=null" aria-label="Fechar atributos">×</button>
+        </div>
+        <span class="inspector-category">{{ selectedFeature.properties.categoria || 'Informação ambiental' }}</span>
+        <div class="attribute-grid">
+          <div v-for="attribute in inspectorAttributes" :key="attribute.key" class="attribute">
+            <small>{{ attribute.label }}</small><strong>{{ formatValue(selectedFeature.properties[attribute.key]) }}</strong>
+          </div>
+        </div>
+        <p v-if="selectedFeature.properties.descricao" class="inspector-description">{{ selectedFeature.properties.descricao }}</p>
+      </section>
+    </main>
   </div>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -112,24 +127,29 @@
     const escapeHtml = value => String(value ?? 'não informado').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     createApp({
       data() { return {
-        map:null, search:'', error:'', status:'Carregando camadas...', tool:null, bufferRadius:1, measureLayer:null, selectedLayer:null,
+        map:null, search:'', error:'', status:'Carregando camadas...', tool:null, bufferRadius:1, measureLayer:null, selectedLayer:null, selectedFeature:null,
         layers:[
           {key:'poligonos',label:'Áreas protegidas',color:'#198754',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.35},
           {key:'linhas',label:'Corredores ecológicos',color:'#0d6efd',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9},
-          {key:'pontos',label:'Pontos ambientais',color:'#dc3545',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.85}
+          {key:'pontos',label:'Pontos ambientais',color:'#dc3545',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.85},
+          {key:'terras_indigenas',label:'Terras Indígenas · PA',color:'#8b5cf6',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9},
+          {key:'comunidades_quilombolas',label:'Comunidades Quilombolas · PA',color:'#d97706',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9},
+          {key:'unidades_conservacao',label:'Unidades de Conservação · PA',color:'#0891b2',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9}
         ]
       }; },
       computed:{
         visibleCount(){return this.layers.reduce((n,l)=>n+(l.active?this.filteredFeatures(l).length:0),0);},
         totalArea(){return this.layers.find(l=>l.key==='poligonos')?.features.reduce((n,f)=>n+Number(f.properties?.area_km2||0),0)||0;},
         totalLength(){return this.layers.find(l=>l.key==='linhas')?.features.reduce((n,f)=>n+Number(f.properties?.extensao_km||0),0)||0;},
-        toolHint(){return this.tool==='distance'?'Clique em dois ou mais pontos no mapa para medir uma linha.':this.tool==='area'?'Clique em três ou mais pontos e feche o polígono.':this.tool==='buffer'?'Clique no mapa para criar uma área de influência no raio informado.':'Escolha uma ferramenta para iniciar uma análise.';}
+        toolHint(){return this.tool==='distance'?'Clique em dois ou mais pontos no mapa para medir uma linha.':this.tool==='area'?'Clique em três ou mais pontos e feche o polígono.':this.tool==='buffer'?'Clique no mapa para criar uma área de influência no raio informado.':'Escolha uma ferramenta para iniciar uma análise.';},
+        inspectorAttributes(){if(!this.selectedFeature)return [];const properties=this.selectedFeature.properties;return Object.keys(properties).filter(key=>!['id','nome','categoria','descricao','fonte','tipo_representacao'].includes(key)).slice(0,4).map(key=>({key,label:key.replaceAll('_',' ')}));}
       },
       async mounted(){
         this.map=L.map('map').setView([-1.38,-48.45],11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(this.map);
         this.map.on('click', this.handleMapClick);
         await Promise.all(this.layers.map(layer=>this.loadLayer(layer)));
+        this.fitAll();
         this.status='Camadas carregadas. Clique em uma feição para consultar seus atributos.';
       },
       watch:{search(){this.layers.forEach(layer=>this.refreshLayer(layer));}},
@@ -158,7 +178,7 @@
             style:()=>({color:layer.color,fillColor:layer.color,weight:3,fillOpacity:layer.opacity}),
             pointToLayer:(_,latlng)=>L.circleMarker(latlng,{radius:8,color:layer.color,fillColor:layer.color,fillOpacity:layer.opacity}),
             onEachFeature:(feature,leafletFeature)=>{const properties=feature.properties||{};const content=Object.entries(properties).map(([key,value])=>`<strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}<br>`).join('');
-              leafletFeature.bindPopup(content||'Sem atributos disponíveis.');leafletFeature.on('click',()=>{this.selectedLayer=layer;});}
+              leafletFeature.bindPopup(content||'Sem atributos disponíveis.');leafletFeature.on('click',()=>{this.selectedLayer=layer;this.selectedFeature={layerLabel:layer.label,properties};});}
           });if(layer.active)layer.leafletLayer.addTo(this.map);
         },
         toggleLayer(layer){if(layer.active){this.refreshLayer(layer);this.fitLayer(layer);}else if(layer.leafletLayer)this.map.removeLayer(layer.leafletLayer);},
@@ -172,7 +192,6 @@
           if(this.tool==='distance'||this.tool==='area'){if(!this.measureLayer)this.measureLayer=L.featureGroup().addTo(this.map);const marker=L.circleMarker(event.latlng,{radius:5,color:'#b96c13',fillColor:'#f0a83b',fillOpacity:1}).addTo(this.measureLayer);const points=this.measureLayer.getLayers().filter(l=>l instanceof L.CircleMarker).map(l=>[l.getLatLng().lng,l.getLatLng().lat]);if(this.tool==='distance'&&points.length>1){const line=turf.lineString(points);const km=turf.length(line,{units:'kilometers'});this.status=`Distância acumulada: ${km.toFixed(2)} km.`;L.polyline(points.map(p=>[p[1],p[0]]),{color:'#b96c13',dashArray:'6 5'}).addTo(this.measureLayer);}else if(this.tool==='area'&&points.length>2){const ring=[...points,points[0]];const polygon=turf.polygon([ring]);this.status=`Área estimada: ${(turf.area(polygon)/1000000).toFixed(2)} km².`;L.polygon(ring.map(p=>[p[1],p[0]]),{color:'#b96c13',fillColor:'#f0a83b',fillOpacity:.2}).addTo(this.measureLayer);}}
         },
         clearMeasurements(){if(this.measureLayer)this.map.removeLayer(this.measureLayer);this.measureLayer=null;},
-        columns(layer){const first=this.filteredFeatures(layer)[0]||layer.features[0];return first?Object.keys(first.properties||{}):[];},
         formatValue(value){return typeof value==='number'?value.toLocaleString('pt-BR',{maximumFractionDigits:2}):String(value??'—');}
       }
     }).mount('#app');

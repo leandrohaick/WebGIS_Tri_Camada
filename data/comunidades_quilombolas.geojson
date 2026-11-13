@@ -1,0 +1,11 @@
+{
+  "type": "FeatureCollection",
+  "name": "comunidades_quilombolas",
+  "features": [
+    {"type":"Feature","properties":{"id":1,"nome":"Território Quilombola Boa Vista","categoria":"Comunidade Quilombola","municipio":"Oriximiná","regiao":"Baixo Amazonas","status":"Titulado","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-55.90,-1.80]}},
+    {"type":"Feature","properties":{"id":2,"nome":"Território Quilombola Erepecuru","categoria":"Comunidade Quilombola","municipio":"Oriximiná","regiao":"Baixo Amazonas","status":"Titulado","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-55.10,-1.25]}},
+    {"type":"Feature","properties":{"id":3,"nome":"Comunidade Quilombola do Curiaú","categoria":"Comunidade Quilombola","municipio":"Abaetetuba","regiao":"Baixo Tocantins","status":"Reconhecida","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-48.88,-1.72]}},
+    {"type":"Feature","properties":{"id":4,"nome":"Território Quilombola de Salvaterra","categoria":"Comunidade Quilombola","municipio":"Salvaterra","regiao":"Marajó","status":"Reconhecido","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-48.52,-0.75]}},
+    {"type":"Feature","properties":{"id":5,"nome":"Comunidades Quilombolas de Gurupá","categoria":"Comunidade Quilombola","municipio":"Gurupá","regiao":"Marajó / Baixo Amazonas","status":"Reconhecidas","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-51.65,-1.40]}}
+  ]
+}

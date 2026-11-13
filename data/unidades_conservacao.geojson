@@ -1,0 +1,11 @@
+{
+  "type": "FeatureCollection",
+  "name": "unidades_conservacao",
+  "features": [
+    {"type":"Feature","properties":{"id":1,"nome":"Parque Nacional da Amazônia","categoria":"Unidade de Conservação","municipio":"Itaituba / Trairão","grupo":"Proteção Integral","gestao":"Federal - ICMBio","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-56.20,-5.50]}},
+    {"type":"Feature","properties":{"id":2,"nome":"Floresta Nacional de Carajás","categoria":"Unidade de Conservação","municipio":"Parauapebas / Canaã dos Carajás","grupo":"Uso Sustentável","gestao":"Federal - ICMBio","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-50.30,-6.10]}},
+    {"type":"Feature","properties":{"id":3,"nome":"APA Algodoal-Maiandeua","categoria":"Unidade de Conservação","municipio":"Maracanã","grupo":"Uso Sustentável","gestao":"Estadual - SEMAS/PA","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-47.58,-0.58]}},
+    {"type":"Feature","properties":{"id":4,"nome":"Parque Estadual do Utinga","categoria":"Unidade de Conservação","municipio":"Belém","grupo":"Proteção Integral","gestao":"Estadual - SEMAS/PA","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-48.43,-1.42]}},
+    {"type":"Feature","properties":{"id":5,"nome":"Reserva Biológica Tapirapé","categoria":"Unidade de Conservação","municipio":"Marabá","grupo":"Proteção Integral","gestao":"Federal - ICMBio","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-50.75,-5.75]}}
+  ]
+}

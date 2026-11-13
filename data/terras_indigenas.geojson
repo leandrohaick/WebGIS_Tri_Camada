@@ -1,0 +1,11 @@
+{
+  "type": "FeatureCollection",
+  "name": "terras_indigenas",
+  "features": [
+    {"type":"Feature","properties":{"id":1,"nome":"Terra Indígena Alto Rio Guamá","categoria":"Terra Indígena","municipio":"Paragominas / Santa Luzia do Pará","povo":"Tembé","status":"Homologada","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-46.95,-2.05]}},
+    {"type":"Feature","properties":{"id":2,"nome":"Terra Indígena Kayapó","categoria":"Terra Indígena","municipio":"São Félix do Xingu / Ourilândia do Norte","povo":"Mebêngôkre Kayapó","status":"Homologada","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-51.95,-8.25]}},
+    {"type":"Feature","properties":{"id":3,"nome":"Terra Indígena Munduruku","categoria":"Terra Indígena","municipio":"Itaituba / Jacareacanga","povo":"Munduruku","status":"Homologada","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-57.55,-7.55]}},
+    {"type":"Feature","properties":{"id":4,"nome":"Terra Indígena Apyterewa","categoria":"Terra Indígena","municipio":"São Félix do Xingu","povo":"Parakanã","status":"Homologada","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-51.75,-5.95]}},
+    {"type":"Feature","properties":{"id":5,"nome":"Terra Indígena Trincheira/Bacajá","categoria":"Terra Indígena","municipio":"Altamira / São Félix do Xingu","povo":"Mebêngôkre","status":"Homologada","tipo_representacao":"Ponto de referência; não representa limite oficial","fonte":"Camada demonstrativa para apresentação"},"geometry":{"type":"Point","coordinates":[-52.65,-4.95]}}
+  ]
+}
