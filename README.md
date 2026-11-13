@@ -1,6 +1,8 @@
 # WebGIS Ambiental
 
-Mapa interativo das áreas protegidas, corredores ecológicos e pontos ambientais da Região Metropolitana de Belém.
+Painel cartográfico ambiental das áreas protegidas, corredores ecológicos e pontos ambientais da Região Metropolitana de Belém.
+
+A apresentação usa um layout mapa-em-primeiro-plano, com viewport fixo e painel compacto, evitando rolagem da página durante a demonstração.
 
 ## Recursos
 
