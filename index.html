@@ -4,195 +4,1873 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="WebGIS ambiental com camadas vetoriais e ferramentas de geoprocessamento.">
-  <title>Painel Cartográfico Ambiental | Região Metropolitana de Belém</title>
+  <title>Painel Cartográfico Ambiental | RMB &amp; Pará</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    :root { --ink:#17352b; --muted:#527166; --green:#167447; --panel:#f5faf7; --line:#d5e5da; --accent:#f0a83b; }
-    * { box-sizing:border-box; }
-    html,body { width:100%; height:100%; overflow:hidden; }
-    body { margin:0; color:var(--ink); font-family:system-ui,-apple-system,sans-serif; }
-    #app { display:grid; grid-template-columns:330px 1fr; width:100vw; height:100vh; min-height:0; overflow:hidden; }
-    aside { height:100vh; padding:14px; background:rgba(245,250,247,.97); border-right:1px solid var(--line); overflow:hidden; z-index:500; }
-    h1 { margin:0 0 3px; font-size:1.2rem; } h2 { margin:0 0 7px; font-size:.88rem; }
-    .subtitle,.hint { color:var(--muted); font-size:.72rem; line-height:1.25; }
-    .subtitle { margin:0 0 9px; } .hint { margin:5px 0 0; }
-    .section { margin:8px 0; padding:9px; background:white; border:1px solid var(--line); border-radius:9px; }
-    .summary { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-bottom:8px; }
-    .metric { padding:6px 3px; text-align:center; background:white; border:1px solid var(--line); border-radius:7px; }
-    .metric strong { display:block; font-size:.95rem; } .metric small { color:var(--muted); font-size:.62rem; }
-    .layer { padding:6px 0; border-top:1px solid #e8f0eb; } .layer:first-of-type { border-top:0; }
-    .layer-header { display:flex; justify-content:space-between; gap:8px; align-items:center; }
-    .layer-name { font-weight:650; } .count { color:var(--muted); font-size:.78rem; white-space:nowrap; }
-    .swatch { display:inline-block; width:10px; height:10px; margin-right:5px; border-radius:50%; }
-    .layer-list { display:grid; grid-template-columns:1fr 1fr; gap:0 10px; }
-    .layer-actions { display:flex; gap:5px; align-items:center; margin-top:5px; }
-    input[type="search"],input[type="number"],select { width:100%; padding:6px; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:5px; font-size:.75rem; }
-    input[type="range"] { width:90px; accent-color:var(--green); } label { font-size:.82rem; }
-    button { border:0; border-radius:5px; padding:6px 8px; color:white; background:var(--green); cursor:pointer; font:inherit; font-size:.7rem; }
-    button.secondary { color:var(--ink); background:#e4f0e8; } button.active { background:#b96c13; }
-    button:disabled { opacity:.5; cursor:not-allowed; }
-    .button-row { display:flex; flex-wrap:wrap; gap:6px; } .button-row button { flex:1; min-width:90px; }
-    .status { margin:8px 0 0; color:var(--muted); font-size:.68rem; } .error { margin-top:8px; padding:7px; color:#8b1e1e; background:#ffe8e8; border-radius:5px; font-size:.72rem; }
-    .table-wrap { max-height:105px; overflow:hidden; border:1px solid var(--line); border-radius:5px; }
-    table { width:100%; border-collapse:collapse; font-size:.62rem; } th,td { padding:4px; text-align:left; border-bottom:1px solid #e8f0eb; } th { position:sticky; top:0; background:#edf6f0; }
-    #map { position:relative; width:100%; height:100vh; min-height:0; } .leaflet-control-layers { font-size:.75rem; }
-    .inspector { position:absolute; top:18px; right:18px; z-index:450; width:325px; padding:17px; color:#f5fff8; background:rgba(15,45,35,.95); border:1px solid rgba(255,255,255,.2); border-radius:14px; box-shadow:0 12px 35px rgba(10,35,25,.25); }
-    .inspector-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-    .inspector-kicker { margin:0 0 4px; color:#8de0ae; font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
-    .inspector h2 { margin:0; color:#fff; font-size:1.05rem; line-height:1.2; } .inspector-close { padding:2px 7px; color:#d5f3df; background:transparent; font-size:1.2rem; }
-    .inspector-category { display:inline-block; margin:9px 0 12px; padding:4px 8px; color:#123d29; background:#8de0ae; border-radius:20px; font-size:.7rem; font-weight:700; }
-    .attribute-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .attribute { padding:8px; background:rgba(255,255,255,.09); border-radius:7px; } .attribute small { display:block; color:#a9cdb7; font-size:.62rem; text-transform:uppercase; } .attribute strong { display:block; margin-top:2px; color:#fff; font-size:.76rem; line-height:1.25; overflow-wrap:anywhere; }
-    .inspector-description { margin:12px 0 0; padding-top:10px; color:#d7eee0; border-top:1px solid rgba(255,255,255,.15); font-size:.75rem; line-height:1.4; }
-    @media (max-width:760px) { #app { grid-template-columns:280px 1fr; } aside { padding:10px; } h1 { font-size:1rem; } }
+    :root {
+      --ink: #102a21;
+      --ink-soft: #355449;
+      --muted: #5b786d;
+      --green: #156f45;
+      --green-dark: #0f5233;
+      --green-soft: #e6f4ec;
+      --surface: #f5faf7;
+      --card: #ffffff;
+      --line: #d4e4db;
+      --line-soft: #e7f0eb;
+      --amber: #c97214;
+      --amber-soft: #fef3e2;
+      --danger: #9f2323;
+      --danger-soft: #fdeaea;
+      --shadow-sm: 0 1px 3px rgba(16, 42, 33, .06);
+      --shadow-md: 0 10px 28px rgba(12, 36, 27, .16);
+      --shadow-lg: 0 18px 42px rgba(9, 29, 21, .28);
+      --radius-sm: 7px;
+      --radius-md: 11px;
+      --radius-lg: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      color: var(--ink);
+      background: #e5efe9;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 384px;
+      flex: 0 0 384px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      z-index: 700;
+      transition: margin-left .24s cubic-bezier(.22, 1, .36, 1), transform .24s cubic-bezier(.22, 1, .36, 1);
+      overflow: hidden;
+    }
+    .sidebar.collapsed { margin-left: -384px; }
+
+    .sidebar-header {
+      flex: 0 0 auto;
+      padding: 14px 16px 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #f5faf7 100%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      margin-bottom: 6px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      font-size: .66rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .brand-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #16a34a;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, .18);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.14rem;
+      font-weight: 750;
+      letter-spacing: -.015em;
+      line-height: 1.2;
+    }
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: .75rem;
+      line-height: 1.35;
+    }
+
+    .icon-btn {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .icon-btn:hover { background: var(--green-soft); border-color: #b7d2c3; }
+
+    /* Summary KPI strip */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 11px;
+    }
+    .metric {
+      padding: 8px 6px;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      box-shadow: var(--shadow-sm);
+    }
+    .metric strong {
+      display: block;
+      font-size: 1rem;
+      font-weight: 750;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.15;
+    }
+    .metric small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: .65rem;
+      font-weight: 500;
+    }
+
+    /* Search */
+    .search-wrap {
+      position: relative;
+      margin-top: 10px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 8px 30px 8px 32px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      font-size: .8rem;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(21, 111, 69, .14);
+    }
+    .search-clear {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: #e7f0eb;
+      color: var(--ink-soft);
+      font-size: .85rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .search-clear:hover { background: #d4e4db; }
+
+    /* Navigation Tabs */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 10px;
+      padding: 4px;
+      background: #e6f0ea;
+      border-radius: 9px;
+    }
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 7px 6px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink-soft);
+      font: inherit;
+      font-size: .74rem;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background .15s, color .15s, box-shadow .15s;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--green-dark);
+      box-shadow: var(--shadow-sm);
+    }
+    .tab-pill {
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      font-size: .65rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .tab-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    /* Scrollable Sidebar Body */
+    .sidebar-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sidebar-body::-webkit-scrollbar { width: 7px; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: #c3d8cc; border-radius: 999px; }
+    .sidebar-body::-webkit-scrollbar-track { background: transparent; }
+
+    .toolbar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .toolbar button { flex: 1; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 7px 10px;
+      color: #fff;
+      background: var(--green);
+      cursor: pointer;
+      font: inherit;
+      font-size: .75rem;
+      font-weight: 600;
+      line-height: 1.2;
+      transition: background .15s, border-color .15s, opacity .15s;
+      white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) { background: var(--green-dark); }
+    .btn.secondary {
+      color: var(--ink);
+      background: #fff;
+      border-color: var(--line);
+    }
+    .btn.secondary:hover:not(:disabled) { background: var(--green-soft); border-color: #b7d2c3; }
+    .btn.subtle {
+      color: var(--ink-soft);
+      background: #e8f2ec;
+      border-color: transparent;
+      padding: 5px 8px;
+      font-size: .71rem;
+    }
+    .btn.subtle:hover:not(:disabled) { background: #d6e7dd; }
+    .btn.active {
+      background: var(--amber);
+      color: #fff;
+      border-color: var(--amber);
+    }
+    .btn.active:hover:not(:disabled) { background: #b1620f; }
+    .btn.danger {
+      color: var(--danger);
+      background: var(--danger-soft);
+      border-color: #f6caca;
+    }
+    .btn.danger:hover:not(:disabled) { background: #fad6d6; }
+    .btn:disabled { opacity: .48; cursor: not-allowed; }
+
+    /* Layer cards */
+    .group-label {
+      margin: 4px 0 0;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .layer-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 11px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color .15s, opacity .15s;
+    }
+    .layer-card.inactive { opacity: .76; background: #fbfdfc; }
+    .layer-card.has-error { border-color: #efb8b8; }
+
+    .layer-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .layer-toggle {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+    .layer-toggle input[type="checkbox"] {
+      margin: 3px 0 0;
+      width: 15px;
+      height: 15px;
+      accent-color: var(--green);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .layer-title-wrap { min-width: 0; flex: 1; }
+    .layer-title-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .82rem;
+      font-weight: 650;
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .geom-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+    .layer-meta {
+      display: block;
+      margin-top: 2px;
+      font-size: .68rem;
+      color: var(--muted);
+    }
+
+    .count-pill {
+      flex-shrink: 0;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      font-size: .7rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .layer-card.inactive .count-pill { background: #edf2ef; color: var(--muted); }
+
+    .layer-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 9px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line-soft);
+    }
+    .layer-btns { display: flex; gap: 5px; align-items: center; }
+
+    .opacity-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      font-size: .7rem;
+      color: var(--muted);
+    }
+    .opacity-control input[type="range"] {
+      width: 82px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+    .opacity-val {
+      min-width: 30px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    /* Analysis / Geoprocessing Panel */
+    .panel-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .panel-card h2 {
+      margin: 0 0 8px;
+      font-size: .86rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .hint {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: .73rem;
+      line-height: 1.4;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .tool-card-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px 6px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fafdfb;
+      color: var(--ink-soft);
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 650;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+    .tool-card-btn:hover { border-color: #9ec5b0; background: var(--green-soft); color: var(--green-dark); }
+    .tool-card-btn.active {
+      background: var(--amber-soft);
+      border-color: var(--amber);
+      color: #8f4e09;
+      box-shadow: 0 0 0 2px rgba(201, 114, 20, .14);
+    }
+
+    .buffer-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .input-unit {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    .input-unit input {
+      width: 100%;
+      padding: 7px 34px 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      font: inherit;
+      font-size: .82rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      background: #fff;
+    }
+    .input-unit input:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(21, 111, 69, .14);
+    }
+    .unit-suffix {
+      position: absolute;
+      right: 10px;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px;
+    }
+    .chip {
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink-soft);
+      font: inherit;
+      font-size: .69rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .chip:hover { background: var(--green-soft); border-color: #a9ccb8; }
+    .chip.active { background: var(--green); border-color: var(--green); color: #fff; }
+
+    .measure-readout {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 9px;
+      background: #f2f8f4;
+      border: 1px solid var(--line);
+    }
+    .measure-readout strong {
+      display: block;
+      font-size: 1.05rem;
+      color: var(--green-dark);
+      font-variant-numeric: tabular-nums;
+    }
+    .measure-readout small { color: var(--muted); font-size: .71rem; }
+    .measure-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .measure-actions .btn { flex: 1; }
+
+    /* Attributes Table Tab */
+    .attr-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .select-input {
+      width: 100%;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      font-size: .79rem;
+      font-weight: 600;
+    }
+    .table-wrap {
+      flex: 1 1 auto;
+      min-height: 220px;
+      overflow: auto;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .72rem;
+    }
+    th, td {
+      padding: 7px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--line-soft);
+      white-space: nowrap;
+      max-width: 170px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #edf6f0;
+      color: var(--ink-soft);
+      font-size: .67rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    tbody tr { cursor: pointer; transition: background .12s; }
+    tbody tr:hover { background: #f2faf5; }
+    tbody tr.selected-row { background: #dff2e7; font-weight: 600; }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      flex: 0 0 auto;
+      padding: 9px 16px;
+      background: #edf5f0;
+      border-top: 1px solid var(--line);
+    }
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: .72rem;
+      color: var(--ink-soft);
+      line-height: 1.3;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #16a34a;
+      flex-shrink: 0;
+    }
+    .status-dot.working { background: var(--amber); }
+    .error-banner {
+      margin-top: 7px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      background: var(--danger-soft);
+      border: 1px solid #f4c2c2;
+      color: var(--danger);
+      font-size: .72rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .error-banner button {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 3px;
+    }
+
+    /* Map Stage */
+    .map-stage {
+      position: relative;
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 100%;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #dce9e2;
+    }
+    #map.tool-active { cursor: crosshair !important; }
+    #map.tool-active .leaflet-interactive { cursor: crosshair !important; }
+
+    .map-sidebar-toggle {
+      position: absolute;
+      top: 12px;
+      left: 54px;
+      z-index: 460;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border: 1px solid rgba(16, 42, 33, .14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .94);
+      backdrop-filter: blur(8px);
+      color: var(--ink);
+      font: inherit;
+      font-size: .75rem;
+      font-weight: 650;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: background .15s;
+    }
+    .map-sidebar-toggle:hover { background: #fff; }
+
+    /* Floating Tool HUD on Map */
+    .tool-hud {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 460;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(16, 42, 33, .92);
+      backdrop-filter: blur(10px);
+      color: #f2fbf6;
+      font-size: .75rem;
+      box-shadow: var(--shadow-md);
+      max-width: calc(100% - 140px);
+      white-space: nowrap;
+    }
+    .tool-hud strong { color: #fcd34d; font-weight: 700; }
+    .tool-hud-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: rgba(255, 255, 255, .14);
+      color: #fff;
+      font: inherit;
+      font-size: .7rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tool-hud-btn:hover { background: rgba(255, 255, 255, .24); }
+    .tool-hud-btn.primary { background: var(--amber); }
+
+    /* Coordinate pill */
+    .coord-pill {
+      position: absolute;
+      bottom: 24px;
+      right: 12px;
+      z-index: 440;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .88);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(16, 42, 33, .12);
+      color: var(--ink-soft);
+      font-size: .68rem;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Feature Inspector */
+    .inspector {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 500;
+      width: min(355px, calc(100% - 28px));
+      max-height: calc(100% - 66px);
+      overflow-y: auto;
+      padding: 16px;
+      color: #f4fff8;
+      background: rgba(13, 40, 31, .94);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(167, 243, 208, .22);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+    }
+    .inspector-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .inspector-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 0 5px;
+      color: #86efac;
+      font-size: .67rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .inspector-swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .inspector h2 {
+      margin: 0;
+      color: #fff;
+      font-size: 1.04rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .inspector-close {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 7px;
+      color: #dcfce7;
+      background: rgba(255, 255, 255, .07);
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .inspector-close:hover { background: rgba(255, 255, 255, .18); }
+
+    .inspector-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 12px;
+    }
+    .inspector-category {
+      display: inline-block;
+      padding: 4px 10px;
+      color: #092e1e;
+      background: #86efac;
+      border-radius: 999px;
+      font-size: .7rem;
+      font-weight: 700;
+    }
+    .inspector-notice {
+      margin: 0 0 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(251, 191, 36, .13);
+      border: 1px solid rgba(251, 191, 36, .35);
+      color: #fde68a;
+      font-size: .71rem;
+      line-height: 1.35;
+    }
+
+    .attribute-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .attribute {
+      padding: 8px 9px;
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 8px;
+    }
+    .attribute.wide { grid-column: span 2; }
+    .attribute small {
+      display: block;
+      color: #a7d4ba;
+      font-size: .62rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .attribute strong {
+      display: block;
+      margin-top: 3px;
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 600;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+    .inspector-description {
+      margin: 12px 0 0;
+      padding-top: 10px;
+      color: #d6efe0;
+      border-top: 1px solid rgba(255, 255, 255, .14);
+      font-size: .76rem;
+      line-height: 1.45;
+    }
+    .inspector-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid rgba(255, 255, 255, .14);
+    }
+    .inspector-btn {
+      flex: 1;
+      border: 1px solid rgba(134, 239, 172, .3);
+      border-radius: 8px;
+      padding: 7px 10px;
+      background: rgba(134, 239, 172, .14);
+      color: #ecfdf5;
+      font: inherit;
+      font-size: .73rem;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .inspector-btn:hover { background: rgba(134, 239, 172, .24); }
+    .inspector-btn.amber {
+      border-color: rgba(251, 191, 36, .35);
+      background: rgba(251, 191, 36, .16);
+      color: #fef3c7;
+    }
+    .inspector-btn.amber:hover { background: rgba(251, 191, 36, .26); }
+
+    /* Leaflet custom touches */
+    .leaflet-control-layers {
+      border-radius: 9px !important;
+      border: 1px solid rgba(16, 42, 33, .14) !important;
+      box-shadow: var(--shadow-md) !important;
+      font-size: .75rem !important;
+      color: var(--ink) !important;
+    }
+    .leaflet-tooltip.feature-tip {
+      background: rgba(13, 40, 31, .92);
+      border: 1px solid rgba(134, 239, 172, .3);
+      color: #f4fff8;
+      border-radius: 7px;
+      padding: 5px 9px;
+      font-size: .73rem;
+      box-shadow: var(--shadow-md);
+    }
+    .leaflet-tooltip.feature-tip::before { border-top-color: rgba(13, 40, 31, .92); }
+
+    .mobile-backdrop { display: none; }
+
+    @media (max-width: 820px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: min(90vw, 370px);
+        flex: none;
+        margin-left: 0 !important;
+        transform: translateX(0);
+        box-shadow: var(--shadow-lg);
+      }
+      .sidebar.collapsed { transform: translateX(-105%); }
+      .mobile-backdrop.visible {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 650;
+        background: rgba(9, 29, 21, .42);
+        backdrop-filter: blur(2px);
+      }
+      .tool-hud {
+        top: auto;
+        bottom: 52px;
+        max-width: calc(100% - 24px);
+      }
+      .coord-pill { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .inspector {
+        top: auto;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-height: 54dvh;
+      }
+      .map-sidebar-toggle span.toggle-text { display: none; }
+    }
   </style>
 </head>
 <body>
   <div id="app">
-    <aside>
-      <h1>Painel Cartográfico Ambiental</h1>
-      <p class="subtitle">Mapa analítico da Região Metropolitana de Belém com camadas ambientais e ferramentas espaciais.</p>
+    <div class="mobile-backdrop" :class="{visible: sidebarOpen}" @click="toggleSidebar(false)"></div>
 
-      <div class="summary">
-        <div class="metric"><strong>{{ visibleCount }}</strong><small>feições</small></div>
-        <div class="metric"><strong>{{ totalArea.toFixed(2) }}</strong><small>km² de áreas</small></div>
-        <div class="metric"><strong>{{ totalLength.toFixed(1) }}</strong><small>km de linhas</small></div>
-      </div>
+    <aside class="sidebar" :class="{collapsed: !sidebarOpen}" aria-label="Painel de controle cartográfico">
+      <div class="sidebar-header">
+        <div class="brand-row">
+          <div>
+            <span class="brand-kicker"><span class="brand-dot"></span>RMB &amp; Estado do Pará</span>
+            <h1>Painel Cartográfico Ambiental</h1>
+            <p class="subtitle">Camadas vetoriais ambientais e ferramentas espaciais interativas.</p>
+          </div>
+          <button class="icon-btn" @click="toggleSidebar(false)" title="Recolher painel" aria-label="Recolher painel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
 
-      <div class="section">
-        <h2>Pesquisar atributos</h2>
-        <input v-model.trim="search" type="search" placeholder="Nome, categoria ou responsável..." aria-label="Pesquisar atributos">
-        <p class="hint">A busca filtra a tabela e destaca as feições correspondentes no mapa.</p>
-      </div>
-
-      <div class="section">
-        <h2>Camadas vetoriais</h2>
-        <div class="layer-list">
-          <div v-for="layer in layers" :key="layer.key" class="layer">
-            <div class="layer-header">
-              <label class="layer-name"><input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading">
-                <span class="swatch" :style="{background: layer.color}"></span>{{ layer.label }}</label>
-              <span class="count">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
-            </div>
-            <div class="layer-actions">
-              <button class="secondary" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !layer.count">Enquadrar</button>
-              <label title="Opacidade">Opacidade <input type="range" min="0.15" max="1" step="0.05" v-model="layer.opacity" @input="updateOpacity(layer)"></label>
-            </div>
+        <div class="summary">
+          <div class="metric">
+            <strong>{{ visibleCount }}</strong>
+            <small>feições visíveis</small>
+          </div>
+          <div class="metric">
+            <strong>{{ totalArea.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</strong>
+            <small>km² de áreas</small>
+          </div>
+          <div class="metric">
+            <strong>{{ totalLength.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 1}) }}</strong>
+            <small>km de linhas</small>
           </div>
         </div>
-        <div class="button-row">
-          <button @click="fitAll">Enquadrar tudo</button>
-          <button class="secondary" @click="clearAll">Limpar mapa</button>
+
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input v-model.trim="search" class="search-input" type="search" placeholder="Filtrar nome, categoria, município ou povo..." aria-label="Pesquisar atributos">
+          <button v-if="search" class="search-clear" @click="search = ''" title="Limpar busca" aria-label="Limpar busca">×</button>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Seções do painel">
+          <button class="tab-btn" :class="{active: activeTab === 'layers'}" role="tab" :aria-selected="activeTab === 'layers'" @click="activeTab = 'layers'">
+            Camadas <span class="tab-pill">{{ activeLayerCount }}/{{ layers.length }}</span>
+          </button>
+          <button class="tab-btn" :class="{active: activeTab === 'tools'}" role="tab" :aria-selected="activeTab === 'tools'" @click="activeTab = 'tools'">
+            Análise <span v-if="tool" class="tab-dot" title="Ferramenta ativa"></span>
+          </button>
+          <button class="tab-btn" :class="{active: activeTab === 'table'}" role="tab" :aria-selected="activeTab === 'table'" @click="activeTab = 'table'">
+            Atributos <span class="tab-pill">{{ activeTableLayer ? filteredFeatures(activeTableLayer).length : 0 }}</span>
+          </button>
         </div>
       </div>
 
-      <div class="section">
-        <h2>Geoprocessamento</h2>
-        <div class="button-row">
-          <button :class="{active: tool === 'distance'}" @click="setTool('distance')">Medir distância</button>
-          <button :class="{active: tool === 'area'}" @click="setTool('area')">Medir área</button>
-          <button class="secondary" @click="clearMeasurements">Limpar</button>
-        </div>
-        <p class="hint">{{ toolHint }}</p>
-        <div class="layer-actions">
-          <input v-model.number="bufferRadius" type="number" min="0.1" max="100" step="0.1" aria-label="Raio do buffer em quilômetros">
-          <span class="hint">km</span>
-          <button @click="setTool('buffer')" :class="{active: tool === 'buffer'}">Criar buffer</button>
-        </div>
+      <div class="sidebar-body">
+        <template v-if="activeTab === 'layers'">
+          <div class="toolbar">
+            <button class="btn" @click="fitAll" :disabled="!activeLayerCount">Enquadrar tudo</button>
+            <button class="btn secondary" @click="activateAll">Ativar todas</button>
+            <button class="btn secondary" @click="clearAll">Limpar</button>
+          </div>
+
+          <div class="group-label">
+            <span>Região Metropolitana de Belém</span>
+            <span>Base Vetorial</span>
+          </div>
+          <div v-for="layer in rmbLayers" :key="layer.key" class="layer-card" :class="{inactive: !layer.active, 'has-error': layer.failed}">
+            <div class="layer-top">
+              <label class="layer-toggle">
+                <input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading || layer.failed">
+                <span class="layer-title-wrap">
+                  <span class="layer-title-line">
+                    <span class="geom-badge" :style="{background: layer.color + '20', color: layer.color}">
+                      <svg v-if="layer.geomType === 'polygon'" width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="2,4 11,2 14,10 6,14"/></svg>
+                      <svg v-else-if="layer.geomType === 'line'" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="2,12 6,5 10,10 14,3"/></svg>
+                      <svg v-else width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5"/></svg>
+                    </span>
+                    <span>{{ layer.label }}</span>
+                  </span>
+                  <span class="layer-meta">{{ layer.loading ? 'Carregando...' : layer.sourceLabel }}</span>
+                </span>
+              </label>
+              <span class="count-pill">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
+            </div>
+            <div class="layer-controls">
+              <div class="layer-btns">
+                <button class="btn subtle" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !filteredFeatures(layer).length">Enquadrar</button>
+                <button class="btn subtle" @click="openLayerTable(layer)" :disabled="!layer.count">Tabela</button>
+              </div>
+              <label class="opacity-control" title="Opacidade da camada">
+                <span>Opac.</span>
+                <input type="range" min="0.15" max="1" step="0.05" v-model.number="layer.opacity" @input="updateOpacity(layer)">
+                <span class="opacity-val">{{ Math.round(layer.opacity * 100) }}%</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="group-label">
+            <span>Estado do Pará (Referência)</span>
+            <span>Temáticas</span>
+          </div>
+          <div v-for="layer in paraLayers" :key="layer.key" class="layer-card" :class="{inactive: !layer.active, 'has-error': layer.failed}">
+            <div class="layer-top">
+              <label class="layer-toggle">
+                <input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading || layer.failed">
+                <span class="layer-title-wrap">
+                  <span class="layer-title-line">
+                    <span class="geom-badge" :style="{background: layer.color + '20', color: layer.color}">
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5"/></svg>
+                    </span>
+                    <span>{{ layer.label }}</span>
+                  </span>
+                  <span class="layer-meta">{{ layer.loading ? 'Carregando...' : layer.sourceLabel }}</span>
+                </span>
+              </label>
+              <span class="count-pill">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
+            </div>
+            <div class="layer-controls">
+              <div class="layer-btns">
+                <button class="btn subtle" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !filteredFeatures(layer).length">Enquadrar</button>
+                <button class="btn subtle" @click="openLayerTable(layer)" :disabled="!layer.count">Tabela</button>
+              </div>
+              <label class="opacity-control" title="Opacidade da camada">
+                <span>Opac.</span>
+                <input type="range" min="0.15" max="1" step="0.05" v-model.number="layer.opacity" @input="updateOpacity(layer)">
+                <span class="opacity-val">{{ Math.round(layer.opacity * 100) }}%</span>
+              </label>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="activeTab === 'tools'">
+          <div class="panel-card">
+            <h2>Ferramentas de Geoprocessamento</h2>
+            <div class="tool-grid">
+              <button class="tool-card-btn" :class="{active: tool === 'distance'}" @click="setTool('distance')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H3"/><path d="M7 6v4"/><path d="M12 6v6"/><path d="M17 6v4"/></svg>
+                Distância
+              </button>
+              <button class="tool-card-btn" :class="{active: tool === 'area'}" @click="setTool('area')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 6 19 4 21 17 7 20 4 6"/></svg>
+                Área
+              </button>
+              <button class="tool-card-btn" :class="{active: tool === 'buffer'}" @click="setTool('buffer')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                Buffer
+              </button>
+            </div>
+            <p class="hint">{{ toolHint }}</p>
+          </div>
+
+          <div class="panel-card">
+            <h2>Raio do Buffer</h2>
+            <div class="buffer-row">
+              <div class="input-unit">
+                <input v-model.number="bufferRadius" type="number" min="0.1" max="200" step="0.1" aria-label="Raio do buffer em quilômetros">
+                <span class="unit-suffix">km</span>
+              </div>
+              <button class="btn" :class="{active: tool === 'buffer'}" @click="setTool('buffer')">
+                {{ tool === 'buffer' ? 'Ativo no mapa' : 'Ativar buffer' }}
+              </button>
+            </div>
+            <div class="presets">
+              <button v-for="preset in [0.5, 1, 5, 10, 25]" :key="preset" class="chip" :class="{active: bufferRadius === preset}" @click="bufferRadius = preset">
+                {{ preset }} km
+              </button>
+            </div>
+            <div v-if="selectedFeature" class="measure-actions">
+              <button class="btn secondary" @click="bufferFromSelected">Aplicar buffer na feição selecionada</button>
+            </div>
+          </div>
+
+          <div v-if="measureResult || measurePoints.length || hasMeasureGeometry" class="panel-card">
+            <h2>Resultado da Análise</h2>
+            <div class="measure-readout">
+              <strong>{{ measureResult || 'Aguardando cliques no mapa...' }}</strong>
+              <small v-if="tool === 'distance' || tool === 'area'">{{ measurePoints.length }} vértice(s) marcado(s)</small>
+              <small v-else-if="bufferCenterLabel">Centro: {{ bufferCenterLabel }}</small>
+            </div>
+            <div class="measure-actions">
+              <button v-if="(tool === 'distance' || tool === 'area') && measurePoints.length" class="btn secondary" @click="undoPoint">Desfazer ponto</button>
+              <button v-if="(tool === 'distance' || tool === 'area') && measurePoints.length > 1" class="btn" @click="finishMeasurement">Concluir</button>
+              <button class="btn danger" @click="clearMeasurements">Limpar tudo</button>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="activeTab === 'table'">
+          <div class="attr-toolbar">
+            <select v-model="selectedLayerKey" class="select-input" aria-label="Selecionar camada para tabela de atributos">
+              <option v-for="layer in layers" :key="layer.key" :value="layer.key">
+                {{ layer.label }} ({{ filteredFeatures(layer).length }})
+              </option>
+            </select>
+            <p class="hint" style="margin:0;">Clique em qualquer linha da tabela para localizar e inspecionar a feição no mapa.</p>
+          </div>
+
+          <div class="table-wrap" v-if="activeTableLayer">
+            <table>
+              <thead>
+                <tr>
+                  <th v-for="col in tableColumns" :key="col">{{ formatColumnLabel(col) }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(feature, idx) in filteredFeatures(activeTableLayer)"
+                  :key="featureKey(activeTableLayer.key, feature, idx)"
+                  :class="{'selected-row': isFeatureSelected(activeTableLayer.key, feature)}"
+                  @click="selectFeatureFromTable(activeTableLayer, feature)"
+                >
+                  <td v-for="col in tableColumns" :key="col" :title="formatValue(feature.properties?.[col], col)">
+                    {{ formatValue(feature.properties?.[col], col) }}
+                  </td>
+                </tr>
+                <tr v-if="!filteredFeatures(activeTableLayer).length">
+                  <td :colspan="Math.max(1, tableColumns.length)" style="text-align:center; color:var(--muted); padding:18px;">
+                    Nenhuma feição corresponde ao filtro atual.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
       </div>
 
-      <p class="status" role="status">{{ status }}</p><div v-if="error" class="error" role="alert">{{ error }}</div>
+      <div class="sidebar-footer">
+        <div class="status-line" role="status">
+          <span class="status-dot" :class="{working: isLoading || !!tool}"></span>
+          <span>{{ status }}</span>
+        </div>
+        <div v-if="error" class="error-banner" role="alert">
+          <span>{{ error }}</span>
+          <button @click="error = ''" aria-label="Fechar alerta">×</button>
+        </div>
+      </div>
     </aside>
-    <main id="map" aria-label="Mapa interativo">
+
+    <main class="map-stage">
+      <div id="map" :class="{'tool-active': !!tool}" aria-label="Mapa interativo"></div>
+
+      <button class="map-sidebar-toggle" @click="toggleSidebar(!sidebarOpen)" :aria-expanded="sidebarOpen">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <span class="toggle-text">{{ sidebarOpen ? 'Ocultar painel' : 'Abrir painel' }}</span>
+      </button>
+
+      <div v-if="tool" class="tool-hud" aria-live="polite">
+        <span><strong>{{ toolBadge }}</strong> · {{ measureResult || 'Clique no mapa' }}</span>
+        <button v-if="(tool === 'distance' || tool === 'area') && measurePoints.length" class="tool-hud-btn" @click="undoPoint">Desfazer</button>
+        <button v-if="hasMeasureGeometry" class="tool-hud-btn" @click="clearMeasurements">Limpar</button>
+        <button class="tool-hud-btn primary" @click="setTool(tool)">Encerrar</button>
+      </div>
+
+      <div v-if="cursorCoords" class="coord-pill">{{ cursorCoords }}</div>
+
       <section v-if="selectedFeature" class="inspector" aria-live="polite">
         <div class="inspector-top">
-          <div><p class="inspector-kicker">{{ selectedFeature.layerLabel }}</p><h2>{{ selectedFeature.properties.nome || 'Feição selecionada' }}</h2></div>
-          <button class="inspector-close" @click="selectedFeature=null" aria-label="Fechar atributos">×</button>
+          <div>
+            <p class="inspector-kicker">
+              <span class="inspector-swatch" :style="{background: selectedFeature.layerColor}"></span>
+              {{ selectedFeature.layerLabel }}
+            </p>
+            <h2>{{ selectedFeature.properties.nome || 'Feição selecionada' }}</h2>
+          </div>
+          <button class="inspector-close" @click="clearSelection" aria-label="Fechar atributos">×</button>
         </div>
-        <span class="inspector-category">{{ selectedFeature.properties.categoria || 'Informação ambiental' }}</span>
+
+        <div class="inspector-badges">
+          <span class="inspector-category">{{ selectedFeature.properties.categoria || 'Informação ambiental' }}</span>
+        </div>
+
+        <p v-if="selectedFeature.properties.tipo_representacao" class="inspector-notice">
+          {{ selectedFeature.properties.tipo_representacao }}
+        </p>
+
         <div class="attribute-grid">
-          <div v-for="attribute in inspectorAttributes" :key="attribute.key" class="attribute">
-            <small>{{ attribute.label }}</small><strong>{{ formatValue(selectedFeature.properties[attribute.key]) }}</strong>
+          <div
+            v-for="attribute in inspectorAttributes"
+            :key="attribute.key"
+            class="attribute"
+            :class="{wide: attribute.wide}"
+          >
+            <small>{{ attribute.label }}</small>
+            <strong>{{ attribute.formatted }}</strong>
           </div>
         </div>
-        <p v-if="selectedFeature.properties.descricao" class="inspector-description">{{ selectedFeature.properties.descricao }}</p>
+
+        <p v-if="selectedFeature.properties.descricao" class="inspector-description">
+          {{ selectedFeature.properties.descricao }}
+        </p>
+
+        <div class="inspector-actions">
+          <button class="inspector-btn" @click="zoomToSelected">Enquadrar feição</button>
+          <button class="inspector-btn amber" @click="bufferFromSelected">Buffer ({{ bufferRadius }} km)</button>
+        </div>
       </section>
     </main>
   </div>
+
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@turf/turf@7/turf.min.js"></script>
   <script>
     const { createApp } = Vue;
-    const escapeHtml = value => String(value ?? 'não informado').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+
+    const FIELD_LABELS = {
+      id: 'ID',
+      nome: 'Nome',
+      categoria: 'Categoria',
+      area_km2: 'Área',
+      extensao_km: 'Extensão',
+      responsavel: 'Responsável',
+      municipio: 'Município',
+      regiao: 'Região',
+      grupo: 'Grupo',
+      gestao: 'Gestão',
+      povo: 'Povo',
+      status: 'Status',
+      fonte: 'Fonte',
+      descricao: 'Descrição'
+    };
+
+    const escapeHtml = value => String(value ?? 'não informado')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+
     createApp({
-      data() { return {
-        map:null, search:'', error:'', status:'Carregando camadas...', tool:null, bufferRadius:1, measureLayer:null, selectedLayer:null, selectedFeature:null,
-        layers:[
-          {key:'poligonos',label:'Áreas protegidas',color:'#198754',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.35},
-          {key:'linhas',label:'Corredores ecológicos',color:'#0d6efd',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9},
-          {key:'pontos',label:'Pontos ambientais',color:'#dc3545',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.85},
-          {key:'terras_indigenas',label:'Terras Indígenas · PA',color:'#8b5cf6',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9},
-          {key:'comunidades_quilombolas',label:'Comunidades Quilombolas · PA',color:'#d97706',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9},
-          {key:'unidades_conservacao',label:'Unidades de Conservação · PA',color:'#0891b2',active:true,loading:false,count:0,features:[],leafletLayer:null,opacity:0.9}
-        ]
-      }; },
-      computed:{
-        visibleCount(){return this.layers.reduce((n,l)=>n+(l.active?this.filteredFeatures(l).length:0),0);},
-        totalArea(){return this.layers.find(l=>l.key==='poligonos')?.features.reduce((n,f)=>n+Number(f.properties?.area_km2||0),0)||0;},
-        totalLength(){return this.layers.find(l=>l.key==='linhas')?.features.reduce((n,f)=>n+Number(f.properties?.extensao_km||0),0)||0;},
-        toolHint(){return this.tool==='distance'?'Clique em dois ou mais pontos no mapa para medir uma linha.':this.tool==='area'?'Clique em três ou mais pontos e feche o polígono.':this.tool==='buffer'?'Clique no mapa para criar uma área de influência no raio informado.':'Escolha uma ferramenta para iniciar uma análise.';},
-        inspectorAttributes(){if(!this.selectedFeature)return [];const properties=this.selectedFeature.properties;return Object.keys(properties).filter(key=>!['id','nome','categoria','descricao','fonte','tipo_representacao'].includes(key)).slice(0,4).map(key=>({key,label:key.replaceAll('_',' ')}));}
+      data() {
+        return {
+          map: null,
+          sidebarOpen: window.innerWidth > 820,
+          activeTab: 'layers',
+          search: '',
+          error: '',
+          status: 'Inicializando mapa e camadas...',
+          tool: null,
+          bufferRadius: 1,
+          bufferCenterLabel: '',
+          measureLayer: null,
+          measurePoints: [],
+          measureResult: '',
+          hasMeasureGeometry: false,
+          selectedLayerKey: 'poligonos',
+          selectedFeature: null,
+          selectedLeafletTarget: null,
+          cursorCoords: '',
+          layers: [
+            { key: 'poligonos', group: 'rmb', geomType: 'polygon', hasApi: true, label: 'Áreas protegidas', color: '#15803d', active: true, loading: false, failed: false, count: 0, features: [], leafletLayer: null, opacity: 0.35, sourceLabel: 'PostGIS / GeoJSON' },
+            { key: 'linhas', group: 'rmb', geomType: 'line', hasApi: true, label: 'Corredores ecológicos', color: '#0284c7', active: true, loading: false, failed: false, count: 0, features: [], leafletLayer: null, opacity: 0.9, sourceLabel: 'PostGIS / GeoJSON' },
+            { key: 'pontos', group: 'rmb', geomType: 'point', hasApi: true, label: 'Pontos ambientais', color: '#dc2626', active: true, loading: false, failed: false, count: 0, features: [], leafletLayer: null, opacity: 0.9, sourceLabel: 'PostGIS / GeoJSON' },
+            { key: 'terras_indigenas', group: 'para', geomType: 'point', hasApi: false, label: 'Terras Indígenas · PA', color: '#7c3aed', active: true, loading: false, failed: false, count: 0, features: [], leafletLayer: null, opacity: 0.9, sourceLabel: 'Camada demonstrativa' },
+            { key: 'comunidades_quilombolas', group: 'para', geomType: 'point', hasApi: false, label: 'Comunidades Quilombolas · PA', color: '#d97706', active: true, loading: false, failed: false, count: 0, features: [], leafletLayer: null, opacity: 0.9, sourceLabel: 'Camada demonstrativa' },
+            { key: 'unidades_conservacao', group: 'para', geomType: 'point', hasApi: false, label: 'Unidades de Conservação · PA', color: '#0891b2', active: true, loading: false, failed: false, count: 0, features: [], leafletLayer: null, opacity: 0.9, sourceLabel: 'Camada demonstrativa' }
+          ]
+        };
       },
-      async mounted(){
-        this.map=L.map('map').setView([-1.38,-48.45],11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(this.map);
+      computed: {
+        rmbLayers() { return this.layers.filter(l => l.group === 'rmb'); },
+        paraLayers() { return this.layers.filter(l => l.group === 'para'); },
+        isLoading() { return this.layers.some(l => l.loading); },
+        activeLayerCount() { return this.layers.filter(l => l.active).length; },
+        visibleCount() {
+          return this.layers.reduce((sum, l) => sum + (l.active ? this.filteredFeatures(l).length : 0), 0);
+        },
+        totalArea() {
+          const layer = this.layers.find(l => l.key === 'poligonos');
+          if (!layer || !layer.active) return 0;
+          return this.filteredFeatures(layer).reduce((sum, f) => sum + Number(f.properties?.area_km2 || 0), 0);
+        },
+        totalLength() {
+          const layer = this.layers.find(l => l.key === 'linhas');
+          if (!layer || !layer.active) return 0;
+          return this.filteredFeatures(layer).reduce((sum, f) => sum + Number(f.properties?.extensao_km || 0), 0);
+        },
+        activeTableLayer() {
+          return this.layers.find(l => l.key === this.selectedLayerKey) || this.layers[0];
+        },
+        tableColumns() {
+          const layer = this.activeTableLayer;
+          if (!layer) return [];
+          const sample = this.filteredFeatures(layer)[0] || layer.features[0];
+          if (!sample?.properties) return [];
+          return Object.keys(sample.properties).filter(k => !['id', 'tipo_representacao'].includes(k));
+        },
+        toolBadge() {
+          if (this.tool === 'distance') return 'Medição de distância';
+          if (this.tool === 'area') return 'Medição de área';
+          if (this.tool === 'buffer') return `Buffer (${this.bufferRadius} km)`;
+          return '';
+        },
+        toolHint() {
+          if (this.tool === 'distance') return 'Clique em dois ou mais pontos no mapa para calcular a distância acumulada.';
+          if (this.tool === 'area') return 'Clique em três ou mais pontos no mapa para calcular a área e o perímetro.';
+          if (this.tool === 'buffer') return 'Clique em qualquer local do mapa ou aplique diretamente sobre a feição selecionada.';
+          return 'Escolha uma ferramenta acima e clique no mapa para iniciar a análise espacial.';
+        },
+        inspectorAttributes() {
+          if (!this.selectedFeature) return [];
+          const props = this.selectedFeature.properties || {};
+          const excluded = new Set(['id', 'nome', 'categoria', 'descricao', 'tipo_representacao']);
+          return Object.keys(props)
+            .filter(key => !excluded.has(key) && props[key] !== null && props[key] !== undefined && props[key] !== '')
+            .map(key => ({
+              key,
+              label: this.formatColumnLabel(key),
+              formatted: this.formatValue(props[key], key),
+              wide: String(props[key]).length > 26 || key === 'fonte' || key === 'municipio'
+            }));
+        }
+      },
+      async mounted() {
+        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        });
+        const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap &copy; CARTO'
+        });
+        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 18,
+          attribution: 'Tiles &copy; Esri'
+        });
+        const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+          maxZoom: 17,
+          attribution: '&copy; OpenTopoMap'
+        });
+
+        this.map = L.map('map', {
+          center: [-1.36, -48.43],
+          zoom: 12,
+          layers: [osm]
+        });
+
+        L.control.layers(
+          {
+            'OpenStreetMap': osm,
+            'Mapa Claro (Carto)': cartoLight,
+            'Satélite (Esri)': satellite,
+            'Topográfico': topo
+          },
+          null,
+          { position: 'bottomleft' }
+        ).addTo(this.map);
+
+        L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(this.map);
+
         this.map.on('click', this.handleMapClick);
-        await Promise.all(this.layers.map(layer=>this.loadLayer(layer)));
+        this.map.on('mousemove', event => {
+          this.cursorCoords = `${event.latlng.lat.toFixed(4)}°, ${event.latlng.lng.toFixed(4)}°`;
+        });
+        this.map.on('mouseout', () => { this.cursorCoords = ''; });
+
+        await Promise.all(this.layers.map(layer => this.loadLayer(layer)));
         this.fitAll();
-        this.status='Camadas carregadas. Clique em uma feição para consultar seus atributos.';
+
+        const failedCount = this.layers.filter(l => l.failed).length;
+        if (!failedCount) {
+          this.status = 'Camadas prontas. Clique em uma feição para inspecionar.';
+        } else {
+          this.status = `${this.layers.length - failedCount} de ${this.layers.length} camadas carregadas.`;
+        }
       },
-      watch:{search(){this.layers.forEach(layer=>this.refreshLayer(layer));}},
-      methods:{
-        async loadLayer(layer){
-          layer.loading=true;
-          try{const response=await fetch(`/api/${layer.key}`);if(!response.ok)throw new Error(`HTTP ${response.status}`);
-            const geojson=await response.json();layer.features=geojson.features||[];layer.count=layer.features.length;this.refreshLayer(layer);this.selectedLayer=this.selectedLayer||layer;
-          }catch(apiError){
-            try {
-              const fallback=await fetch(`data/${layer.key}.geojson`);
-              if(!fallback.ok)throw new Error(`API: ${apiError.message}; arquivo local: HTTP ${fallback.status}`);
-              const geojson=await fallback.json();layer.features=geojson.features||[];layer.count=layer.features.length;this.refreshLayer(layer);this.selectedLayer=this.selectedLayer||layer;
-            } catch(loadError) {
-              layer.active=false;this.error=`Erro ao carregar ${layer.label.toLowerCase()}: ${loadError.message}`;
+      watch: {
+        search() {
+          this.layers.forEach(layer => this.refreshLayer(layer));
+        }
+      },
+      methods: {
+        toggleSidebar(open) {
+          this.sidebarOpen = open;
+          setTimeout(() => {
+            if (this.map) this.map.invalidateSize({ animate: true });
+          }, 260);
+        },
+        async loadLayer(layer) {
+          layer.loading = true;
+          layer.failed = false;
+          try {
+            let geojson = null;
+            if (layer.hasApi) {
+              try {
+                const response = await fetch(`/api/${layer.key}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                geojson = await response.json();
+                layer.sourceLabel = 'API PostGIS';
+              } catch (_) {
+                const fallback = await fetch(`data/${layer.key}.geojson`);
+                if (!fallback.ok) throw new Error(`HTTP ${fallback.status}`);
+                geojson = await fallback.json();
+                layer.sourceLabel = 'GeoJSON local (fallback)';
+              }
+            } else {
+              const localResponse = await fetch(`data/${layer.key}.geojson`);
+              if (!localResponse.ok) throw new Error(`HTTP ${localResponse.status}`);
+              geojson = await localResponse.json();
+              layer.sourceLabel = 'GeoJSON demonstrativo';
             }
-          }finally{layer.loading=false;}
+            layer.features = geojson.features || [];
+            layer.count = layer.features.length;
+            this.refreshLayer(layer);
+          } catch (loadError) {
+            layer.active = false;
+            layer.failed = true;
+            layer.sourceLabel = 'Falha ao carregar';
+            this.error = `Erro ao carregar ${layer.label}: ${loadError.message}`;
+          } finally {
+            layer.loading = false;
+          }
         },
-        filteredFeatures(layer){const query=this.search.toLocaleLowerCase();if(!query)return layer.features;return layer.features.filter(f=>Object.values(f.properties||{}).some(v=>String(v??'').toLocaleLowerCase().includes(query)));},
-        refreshLayer(layer){
-          if(!this.map||!layer.features.length)return;
-          if(layer.leafletLayer)this.map.removeLayer(layer.leafletLayer);
-          const visibleIds=new Set(this.filteredFeatures(layer).map(f=>f.properties?.id));
-          layer.leafletLayer=L.geoJSON({type:'FeatureCollection',features:layer.features},{
-            filter:feature=>!this.search||visibleIds.has(feature.properties?.id),
-            style:()=>({color:layer.color,fillColor:layer.color,weight:3,fillOpacity:layer.opacity}),
-            pointToLayer:(_,latlng)=>L.circleMarker(latlng,{radius:8,color:layer.color,fillColor:layer.color,fillOpacity:layer.opacity}),
-            onEachFeature:(feature,leafletFeature)=>{const properties=feature.properties||{};const content=Object.entries(properties).map(([key,value])=>`<strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}<br>`).join('');
-              leafletFeature.bindPopup(content||'Sem atributos disponíveis.');leafletFeature.on('click',()=>{this.selectedLayer=layer;this.selectedFeature={layerLabel:layer.label,properties};});}
-          });if(layer.active)layer.leafletLayer.addTo(this.map);
+        filteredFeatures(layer) {
+          const query = this.search.toLocaleLowerCase();
+          if (!query) return layer.features;
+          return layer.features.filter(feature =>
+            Object.values(feature.properties || {}).some(v => String(v ?? '').toLocaleLowerCase().includes(query))
+          );
         },
-        toggleLayer(layer){if(layer.active){this.refreshLayer(layer);this.fitLayer(layer);}else if(layer.leafletLayer)this.map.removeLayer(layer.leafletLayer);},
-        updateOpacity(layer){this.refreshLayer(layer);},
-        fitLayer(layer){if(layer.leafletLayer&&layer.leafletLayer.getBounds().isValid())this.map.fitBounds(layer.leafletLayer.getBounds(),{padding:[24,24]});},
-        fitAll(){const active=this.layers.filter(l=>l.active&&l.leafletLayer);if(!active.length)return;const group=L.featureGroup(active.map(l=>l.leafletLayer));if(group.getBounds().isValid())this.map.fitBounds(group.getBounds(),{padding:[24,24]});},
-        clearAll(){this.layers.forEach(l=>{l.active=false;if(l.leafletLayer)this.map.removeLayer(l.leafletLayer);});this.clearMeasurements();},
-        setTool(tool){this.clearMeasurements();this.tool=this.tool===tool?null:tool;this.status=this.tool?this.toolHint:'Ferramenta encerrada.';},
-        handleMapClick(event){
-          if(this.tool==='buffer'){const point=turf.point([event.latlng.lng,event.latlng.lat]);const buffered=turf.buffer(point,this.bufferRadius,{units:'kilometers'});if(this.measureLayer)this.map.removeLayer(this.measureLayer);this.measureLayer=L.geoJSON(buffered,{style:{color:'#b96c13',fillColor:'#f0a83b',fillOpacity:.25,weight:2}}).addTo(this.map);this.status=`Buffer de ${this.bufferRadius} km criado.`;return;}
-          if(this.tool==='distance'||this.tool==='area'){if(!this.measureLayer)this.measureLayer=L.featureGroup().addTo(this.map);const marker=L.circleMarker(event.latlng,{radius:5,color:'#b96c13',fillColor:'#f0a83b',fillOpacity:1}).addTo(this.measureLayer);const points=this.measureLayer.getLayers().filter(l=>l instanceof L.CircleMarker).map(l=>[l.getLatLng().lng,l.getLatLng().lat]);if(this.tool==='distance'&&points.length>1){const line=turf.lineString(points);const km=turf.length(line,{units:'kilometers'});this.status=`Distância acumulada: ${km.toFixed(2)} km.`;L.polyline(points.map(p=>[p[1],p[0]]),{color:'#b96c13',dashArray:'6 5'}).addTo(this.measureLayer);}else if(this.tool==='area'&&points.length>2){const ring=[...points,points[0]];const polygon=turf.polygon([ring]);this.status=`Área estimada: ${(turf.area(polygon)/1000000).toFixed(2)} km².`;L.polygon(ring.map(p=>[p[1],p[0]]),{color:'#b96c13',fillColor:'#f0a83b',fillOpacity:.2}).addTo(this.measureLayer);}}
+        featureKey(layerKey, feature, idx = 0) {
+          return `${layerKey}:${feature.properties?.id ?? feature.properties?.nome ?? idx}`;
         },
-        clearMeasurements(){if(this.measureLayer)this.map.removeLayer(this.measureLayer);this.measureLayer=null;},
-        formatValue(value){return typeof value==='number'?value.toLocaleString('pt-BR',{maximumFractionDigits:2}):String(value??'—');}
+        isFeatureSelected(layerKey, feature) {
+          if (!this.selectedFeature) return false;
+          return this.selectedFeature.layerKey === layerKey &&
+            this.selectedFeature.properties?.id === feature.properties?.id &&
+            this.selectedFeature.properties?.nome === feature.properties?.nome;
+        },
+        baseFeatureStyle(layer, isSelected = false) {
+          if (layer.geomType === 'line') {
+            return {
+              color: isSelected ? '#f59e0b' : layer.color,
+              weight: isSelected ? 6 : (this.search ? 4.5 : 3.5),
+              opacity: isSelected ? 1 : layer.opacity
+            };
+          }
+          return {
+            color: isSelected ? '#f59e0b' : layer.color,
+            fillColor: layer.color,
+            weight: isSelected ? 3.5 : 2.2,
+            opacity: isSelected ? 1 : Math.min(1, layer.opacity + 0.45),
+            fillOpacity: layer.opacity
+          };
+        },
+        pointMarkerStyle(layer, isSelected = false) {
+          return {
+            radius: isSelected ? 10 : (this.search ? 8 : 7),
+            color: isSelected ? '#fbbf24' : '#ffffff',
+            weight: isSelected ? 3 : 2,
+            fillColor: layer.color,
+            opacity: isSelected ? 1 : layer.opacity,
+            fillOpacity: isSelected ? 1 : layer.opacity
+          };
+        },
+        refreshLayer(layer) {
+          if (!this.map || !layer.features.length) return;
+          if (layer.leafletLayer) this.map.removeLayer(layer.leafletLayer);
+
+          const visibleSet = new Set(this.filteredFeatures(layer));
+          layer.leafletLayer = L.geoJSON(
+            { type: 'FeatureCollection', features: layer.features },
+            {
+              filter: feature => !this.search || visibleSet.has(feature),
+              style: feature => this.baseFeatureStyle(layer, this.isFeatureSelected(layer.key, feature)),
+              pointToLayer: (feature, latlng) => L.circleMarker(latlng, this.pointMarkerStyle(layer, this.isFeatureSelected(layer.key, feature))),
+              onEachFeature: (feature, leafletFeature) => {
+                if (this.isFeatureSelected(layer.key, feature)) {
+                  this.selectedLeafletTarget = leafletFeature;
+                }
+                const props = feature.properties || {};
+                const tipTitle = escapeHtml(props.nome || 'Feição');
+                const tipSub = props.categoria ? `<br><span style="opacity:.8">${escapeHtml(props.categoria)}</span>` : '';
+                leafletFeature.bindTooltip(`<strong>${tipTitle}</strong>${tipSub}`, {
+                  className: 'feature-tip',
+                  direction: 'top',
+                  offset: [0, -6]
+                });
+
+                leafletFeature.on('mouseover', () => {
+                  if (this.tool) return;
+                  if (leafletFeature.setStyle) {
+                    if (layer.geomType === 'point') {
+                      leafletFeature.setStyle({ radius: 9.5, weight: 2.5 });
+                    } else {
+                      leafletFeature.setStyle({ weight: layer.geomType === 'line' ? 5.5 : 3.2 });
+                    }
+                  }
+                });
+
+                leafletFeature.on('mouseout', () => {
+                  if (this.tool) return;
+                  this.applyStyleToTarget(layer, feature, leafletFeature);
+                });
+
+                leafletFeature.on('click', () => {
+                  if (this.tool) return;
+                  this.selectFeature(layer, feature, leafletFeature);
+                });
+              }
+            }
+          );
+
+          if (layer.active) layer.leafletLayer.addTo(this.map);
+        },
+        applyStyleToTarget(layer, feature, target) {
+          if (!target?.setStyle) return;
+          const selected = this.isFeatureSelected(layer.key, feature);
+          if (layer.geomType === 'point') {
+            target.setStyle(this.pointMarkerStyle(layer, selected));
+          } else {
+            target.setStyle(this.baseFeatureStyle(layer, selected));
+          }
+        },
+        selectFeature(layer, feature, leafletTarget = null) {
+          const prev = this.selectedLeafletTarget;
+          this.selectedLayerKey = layer.key;
+          this.selectedFeature = {
+            layerKey: layer.key,
+            layerLabel: layer.label,
+            layerColor: layer.color,
+            properties: feature.properties || {},
+            feature,
+            leafletTarget
+          };
+          this.selectedLeafletTarget = leafletTarget;
+
+          if (prev && prev !== leafletTarget) {
+            this.layers.forEach(l => {
+              if (l.leafletLayer) {
+                l.leafletLayer.eachLayer(child => {
+                  if (child === prev && child.feature) this.applyStyleToTarget(l, child.feature, child);
+                });
+              }
+            });
+          }
+          if (leafletTarget) {
+            this.applyStyleToTarget(layer, feature, leafletTarget);
+            if (leafletTarget.bringToFront) leafletTarget.bringToFront();
+          }
+          this.status = `Inspecionando: ${feature.properties?.nome || layer.label}.`;
+        },
+        clearSelection() {
+          const prev = this.selectedLeafletTarget;
+          const prevKey = this.selectedFeature?.layerKey;
+          this.selectedFeature = null;
+          this.selectedLeafletTarget = null;
+          if (prev && prevKey) {
+            const layer = this.layers.find(l => l.key === prevKey);
+            if (layer && prev.feature) this.applyStyleToTarget(layer, prev.feature, prev);
+          }
+        },
+        selectFeatureFromTable(layer, feature) {
+          if (!layer.active) {
+            layer.active = true;
+            this.refreshLayer(layer);
+          }
+          let target = null;
+          if (layer.leafletLayer) {
+            layer.leafletLayer.eachLayer(child => {
+              if (child.feature === feature || (feature.properties?.id !== undefined && child.feature?.properties?.id === feature.properties?.id)) {
+                target = child;
+              }
+            });
+          }
+          this.selectFeature(layer, feature, target);
+          this.zoomToSelected();
+          if (window.innerWidth <= 820) this.toggleSidebar(false);
+        },
+        openLayerTable(layer) {
+          this.selectedLayerKey = layer.key;
+          this.activeTab = 'table';
+        },
+        zoomToSelected() {
+          if (!this.map || !this.selectedFeature) return;
+          const target = this.selectedFeature.leafletTarget;
+          if (target?.getBounds) {
+            this.map.fitBounds(target.getBounds(), { padding: [60, 60], maxZoom: 15 });
+          } else if (target?.getLatLng) {
+            this.map.setView(target.getLatLng(), Math.max(this.map.getZoom(), 13), { animate: true });
+          } else {
+            const coords = this.selectedFeature.feature?.geometry?.coordinates;
+            if (Array.isArray(coords) && typeof coords[0] === 'number') {
+              this.map.setView([coords[1], coords[0]], 13, { animate: true });
+            }
+          }
+        },
+        toggleLayer(layer) {
+          if (layer.active) {
+            if (!layer.leafletLayer) {
+              this.refreshLayer(layer);
+            } else {
+              layer.leafletLayer.addTo(this.map);
+            }
+          } else if (layer.leafletLayer) {
+            this.map.removeLayer(layer.leafletLayer);
+          }
+        },
+        updateOpacity(layer) {
+          if (!layer.leafletLayer) return;
+          layer.leafletLayer.eachLayer(child => {
+            if (child.feature) this.applyStyleToTarget(layer, child.feature, child);
+          });
+        },
+        fitLayer(layer) {
+          if (layer.leafletLayer && layer.leafletLayer.getBounds().isValid()) {
+            this.map.fitBounds(layer.leafletLayer.getBounds(), { padding: [36, 36], maxZoom: 15 });
+          }
+        },
+        fitAll() {
+          const activeLayers = this.layers.filter(l => l.active && l.leafletLayer && l.leafletLayer.getBounds().isValid());
+          if (!activeLayers.length) return;
+          const group = L.featureGroup(activeLayers.map(l => l.leafletLayer));
+          if (group.getBounds().isValid()) {
+            this.map.fitBounds(group.getBounds(), { padding: [36, 36] });
+          }
+        },
+        activateAll() {
+          this.layers.forEach(layer => {
+            if (!layer.failed && layer.count && !layer.active) {
+              layer.active = true;
+              this.toggleLayer(layer);
+            }
+          });
+          this.status = 'Todas as camadas disponíveis foram ativadas.';
+        },
+        clearAll() {
+          this.layers.forEach(l => {
+            l.active = false;
+            if (l.leafletLayer) this.map.removeLayer(l.leafletLayer);
+          });
+          this.clearSelection();
+          this.clearMeasurements();
+          this.status = 'Camadas e medições limpas.';
+        },
+        setTool(tool) {
+          if (this.tool === tool) {
+            this.tool = null;
+            this.status = 'Ferramenta encerrada.';
+            return;
+          }
+          this.clearMeasurements();
+          this.tool = tool;
+          this.activeTab = 'tools';
+          this.status = this.toolHint;
+        },
+        handleMapClick(event) {
+          if (!this.tool) return;
+          if (this.tool === 'buffer') {
+            this.createBufferAt(event.latlng.lat, event.latlng.lng);
+            return;
+          }
+          if (this.tool === 'distance' || this.tool === 'area') {
+            this.measurePoints.push([event.latlng.lat, event.latlng.lng]);
+            this.redrawMeasurement();
+          }
+        },
+        createBufferAt(lat, lng) {
+          const radius = Number(this.bufferRadius);
+          if (!Number.isFinite(radius) || radius <= 0) {
+            this.error = 'Informe um raio de buffer válido maior que zero.';
+            return;
+          }
+          const point = turf.point([lng, lat]);
+          const buffered = turf.buffer(point, radius, { units: 'kilometers' });
+          if (this.measureLayer) this.map.removeLayer(this.measureLayer);
+
+          this.measureLayer = L.featureGroup().addTo(this.map);
+          L.geoJSON(buffered, {
+            interactive: false,
+            style: { color: '#b45309', fillColor: '#f59e0b', fillOpacity: 0.24, weight: 2.5, dashArray: '6 4' }
+          }).addTo(this.measureLayer);
+          L.circleMarker([lat, lng], {
+            interactive: false,
+            radius: 5,
+            color: '#fff',
+            weight: 2,
+            fillColor: '#b45309',
+            fillOpacity: 1
+          }).addTo(this.measureLayer);
+
+          const areaKm2 = turf.area(buffered) / 1000000;
+          this.hasMeasureGeometry = true;
+          this.bufferCenterLabel = `${lat.toFixed(4)}°, ${lng.toFixed(4)}°`;
+          this.measureResult = `Buffer de ${radius} km (${areaKm2.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km²)`;
+          this.status = `${this.measureResult} criado.`;
+        },
+        bufferFromSelected() {
+          if (!this.selectedFeature) return;
+          let center = null;
+          const target = this.selectedFeature.leafletTarget;
+          if (target?.getLatLng) {
+            center = target.getLatLng();
+          } else if (target?.getBounds) {
+            center = target.getBounds().getCenter();
+          } else {
+            const geom = this.selectedFeature.feature?.geometry;
+            if (geom) {
+              const centroid = turf.centroid(this.selectedFeature.feature);
+              center = { lat: centroid.geometry.coordinates[1], lng: centroid.geometry.coordinates[0] };
+            }
+          }
+          if (center) {
+            this.createBufferAt(center.lat, center.lng);
+            if (this.measureLayer?.getBounds().isValid()) {
+              this.map.fitBounds(this.measureLayer.getBounds(), { padding: [48, 48] });
+            }
+          }
+        },
+        redrawMeasurement() {
+          if (this.measureLayer) this.map.removeLayer(this.measureLayer);
+          if (!this.measurePoints.length) {
+            this.measureLayer = null;
+            this.hasMeasureGeometry = false;
+            this.measureResult = '';
+            return;
+          }
+
+          this.measureLayer = L.featureGroup().addTo(this.map);
+          this.hasMeasureGeometry = true;
+
+          const lngLatPoints = this.measurePoints.map(([lat, lng]) => [lng, lat]);
+
+          if (this.tool === 'distance' && lngLatPoints.length > 1) {
+            L.polyline(this.measurePoints, {
+              interactive: false,
+              color: '#b45309',
+              weight: 3.5,
+              dashArray: '7 5'
+            }).addTo(this.measureLayer);
+            const km = turf.length(turf.lineString(lngLatPoints), { units: 'kilometers' });
+            this.measureResult = km < 1
+              ? `${Math.round(km * 1000).toLocaleString('pt-BR')} m`
+              : `${km.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km`;
+            this.status = `Distância acumulada: ${this.measureResult}.`;
+          } else if (this.tool === 'area' && lngLatPoints.length > 2) {
+            L.polygon(this.measurePoints, {
+              interactive: false,
+              color: '#b45309',
+              weight: 2.5,
+              fillColor: '#f59e0b',
+              fillOpacity: 0.24
+            }).addTo(this.measureLayer);
+            const ring = [...lngLatPoints, lngLatPoints[0]];
+            const areaM2 = turf.area(turf.polygon([ring]));
+            const km2 = areaM2 / 1000000;
+            const ha = areaM2 / 10000;
+            this.measureResult = `${km2.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km² (${ha.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ha)`;
+            this.status = `Área estimada: ${this.measureResult}.`;
+          } else if (this.tool === 'area' && lngLatPoints.length === 2) {
+            L.polyline(this.measurePoints, { interactive: false, color: '#b45309', weight: 2.5, dashArray: '5 5' }).addTo(this.measureLayer);
+            this.measureResult = 'Adicione mais 1 ponto';
+          } else {
+            this.measureResult = '1º vértice marcado';
+          }
+
+          this.measurePoints.forEach(([lat, lng], idx) => {
+            L.circleMarker([lat, lng], {
+              interactive: false,
+              radius: idx === this.measurePoints.length - 1 ? 6 : 4.5,
+              color: '#ffffff',
+              weight: 2,
+              fillColor: '#d97706',
+              fillOpacity: 1
+            }).addTo(this.measureLayer);
+          });
+        },
+        undoPoint() {
+          if (!this.measurePoints.length) return;
+          this.measurePoints.pop();
+          this.redrawMeasurement();
+        },
+        finishMeasurement() {
+          this.tool = null;
+          this.status = this.measureResult ? `Medição concluída: ${this.measureResult}.` : 'Medição concluída.';
+        },
+        clearMeasurements() {
+          if (this.measureLayer) this.map.removeLayer(this.measureLayer);
+          this.measureLayer = null;
+          this.measurePoints = [];
+          this.measureResult = '';
+          this.bufferCenterLabel = '';
+          this.hasMeasureGeometry = false;
+        },
+        formatColumnLabel(key) {
+          return FIELD_LABELS[key] || key.replaceAll('_', ' ');
+        },
+        formatValue(value, key = '') {
+          if (value === null || value === undefined || value === '') return '—';
+          if (typeof value === 'number') {
+            const formatted = value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+            if (key === 'area_km2') return `${formatted} km²`;
+            if (key === 'extensao_km') return `${formatted} km`;
+            return formatted;
+          }
+          return String(value);
+        }
       }
     }).mount('#app');
   </script>

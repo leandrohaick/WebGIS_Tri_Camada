@@ -26,6 +26,12 @@ def index() -> Any:
     return send_from_directory(".", "index.html")
 
 
+@app.get("/data/<path:filename>")
+def data_files(filename: str) -> Any:
+    """Serve os arquivos GeoJSON locais usados no fallback de demonstração."""
+    return send_from_directory("data", filename)
+
+
 def consultar_geojson(query: str) -> dict[str, Any]:
     """Executa uma consulta espacial e monta uma FeatureCollection GeoJSON."""
     features = []
