@@ -3,7 +3,7 @@ import os
 from typing import Any
 
 import psycopg2
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
 
@@ -18,6 +18,12 @@ DB_CONFIG = {
     "user": os.getenv("POSTGIS_USER", "postgres"),
     "password": os.getenv("POSTGIS_PASSWORD", "postgres"),
 }
+
+
+@app.get("/")
+def index() -> Any:
+    """Entrega a aplicação web quando o Flask é executado diretamente."""
+    return send_from_directory(".", "index.html")
 
 
 def consultar_geojson(query: str) -> dict[str, Any]:

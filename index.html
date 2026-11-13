@@ -135,9 +135,17 @@
       methods:{
         async loadLayer(layer){
           layer.loading=true;
-          try{const response=await fetch(`data/${layer.key}.geojson`);if(!response.ok)throw new Error(`HTTP ${response.status}`);
+          try{const response=await fetch(`/api/${layer.key}`);if(!response.ok)throw new Error(`HTTP ${response.status}`);
             const geojson=await response.json();layer.features=geojson.features||[];layer.count=layer.features.length;this.refreshLayer(layer);this.selectedLayer=this.selectedLayer||layer;
-          }catch(loadError){layer.active=false;this.error=`Erro ao carregar ${layer.label.toLowerCase()}: ${loadError.message}`;}finally{layer.loading=false;}
+          }catch(apiError){
+            try {
+              const fallback=await fetch(`data/${layer.key}.geojson`);
+              if(!fallback.ok)throw new Error(`API: ${apiError.message}; arquivo local: HTTP ${fallback.status}`);
+              const geojson=await fallback.json();layer.features=geojson.features||[];layer.count=layer.features.length;this.refreshLayer(layer);
+            } catch(loadError) {
+              layer.active=false;this.error=`Erro ao carregar ${layer.label.toLowerCase()}: ${loadError.message}`;
+            }
+          }finally{layer.loading=false;}
         },
         filteredFeatures(layer){const query=this.search.toLocaleLowerCase();if(!query)return layer.features;return layer.features.filter(f=>Object.values(f.properties||{}).some(v=>String(v??'').toLocaleLowerCase().includes(query)));},
         refreshLayer(layer){

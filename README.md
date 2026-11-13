@@ -9,11 +9,11 @@ Mapa interativo das áreas protegidas, corredores ecológicos e pontos ambientai
 - Tabela de atributos da camada selecionada e indicadores de área, extensão e quantidade.
 - Medição de distância e área diretamente no mapa.
 - Criação de buffers em quilômetros a partir de um clique.
-- Dados locais em `data/*.geojson`, sem necessidade de banco para explorar o mapa.
+- A aplicação consulta prioritariamente os endpoints Flask/PostGIS (`/api/poligonos`, `/api/linhas` e `/api/pontos`) e usa `data/*.geojson` apenas como fallback para demonstração sem banco.
 
 ## Uso
 
-Abra o endereço publicado e use o painel lateral para ativar as camadas. Clique nas feições para consultar seus atributos. Na seção **Geoprocessamento**, escolha uma ferramenta e clique no mapa para executar a análise. A API Flask/PostGIS continua disponível para ambientes que tenham o banco configurado.
+Execute `python app.py` e abra `http://127.0.0.1:5000`. Use o painel lateral para ativar as camadas. Clique nas feições para consultar seus atributos. Na seção **Geoprocessamento**, escolha uma ferramenta e clique no mapa para executar a análise. Com PostGIS configurado, as camadas são carregadas pelos três endpoints da API; sem banco, o fallback local mantém a demonstração navegável.
 
 ## Autor
 
