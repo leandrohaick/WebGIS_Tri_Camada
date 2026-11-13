@@ -114,7 +114,7 @@
 
     .icon-btn {
       flex: 0 0 auto;
-      display: inline-flex;
+      display: none;
       align-items: center;
       justify-content: center;
       width: 32px;
@@ -128,6 +128,40 @@
       transition: background .15s, border-color .15s;
     }
     .icon-btn:hover { background: var(--green-soft); border-color: #b7d2c3; }
+
+    /* Import layer card */
+    .import-box {
+      padding: 10px 11px;
+      border: 1.5px dashed #9fc5b0;
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, #f8fcfa 0%, #eff7f2 100%);
+      transition: border-color .15s, background .15s;
+    }
+    .import-box.dragging {
+      border-color: var(--green);
+      background: #e1f3e9;
+    }
+    .import-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 8px 12px;
+      font-size: .78rem;
+      font-weight: 650;
+    }
+    .import-formats {
+      margin: 6px 0 0;
+      text-align: center;
+      font-size: .66rem;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+    .btn.remove-layer {
+      color: var(--danger);
+      background: var(--danger-soft);
+      padding: 5px 7px;
+      font-size: .71rem;
+    }
+    .btn.remove-layer:hover:not(:disabled) { background: #fad6d6; }
 
     /* Summary KPI strip */
     .summary {
@@ -937,6 +971,7 @@
     .mobile-backdrop { display: none; }
 
     @media (max-width: 820px) {
+      .icon-btn.mobile-only-close { display: inline-flex; }
       .sidebar {
         position: fixed;
         top: 0;
@@ -989,8 +1024,8 @@
             <h1>Painel Cartográfico Ambiental</h1>
             <p class="subtitle">Camadas vetoriais ambientais e ferramentas espaciais interativas.</p>
           </div>
-          <button class="icon-btn" @click="toggleSidebar(false)" title="Recolher painel" aria-label="Recolher painel">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <button class="icon-btn mobile-only-close" @click="toggleSidebar(false)" title="Fechar painel" aria-label="Fechar painel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
@@ -1036,73 +1071,66 @@
             <button class="btn secondary" @click="clearAll">Limpar</button>
           </div>
 
-          <div class="group-label">
-            <span>Região Metropolitana de Belém</span>
-            <span>Base Vetorial</span>
-          </div>
-          <div v-for="layer in rmbLayers" :key="layer.key" class="layer-card" :class="{inactive: !layer.active, 'has-error': layer.failed}">
-            <div class="layer-top">
-              <label class="layer-toggle">
-                <input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading || layer.failed">
-                <span class="layer-title-wrap">
-                  <span class="layer-title-line">
-                    <span class="geom-badge" :style="{background: layer.color + '20', color: layer.color}">
-                      <svg v-if="layer.geomType === 'polygon'" width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="2,4 11,2 14,10 6,14"/></svg>
-                      <svg v-else-if="layer.geomType === 'line'" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="2,12 6,5 10,10 14,3"/></svg>
-                      <svg v-else width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5"/></svg>
-                    </span>
-                    <span>{{ layer.label }}</span>
-                  </span>
-                  <span class="layer-meta">{{ layer.loading ? 'Carregando...' : layer.sourceLabel }}</span>
-                </span>
-              </label>
-              <span class="count-pill">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
-            </div>
-            <div class="layer-controls">
-              <div class="layer-btns">
-                <button class="btn subtle" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !filteredFeatures(layer).length">Enquadrar</button>
-                <button class="btn subtle" @click="openLayerTable(layer)" :disabled="!layer.count">Tabela</button>
-              </div>
-              <label class="opacity-control" title="Opacidade da camada">
-                <span>Opac.</span>
-                <input type="range" min="0.15" max="1" step="0.05" v-model.number="layer.opacity" @input="updateOpacity(layer)">
-                <span class="opacity-val">{{ Math.round(layer.opacity * 100) }}%</span>
-              </label>
-            </div>
+          <div
+            class="import-box"
+            :class="{dragging: isDraggingFile}"
+            @dragover.prevent="isDraggingFile = true"
+            @dragleave.prevent="isDraggingFile = false"
+            @drop.prevent="handleDropFiles"
+          >
+            <input
+              ref="fileInput"
+              type="file"
+              multiple
+              hidden
+              accept=".geojson,.json,.zip,.shp,.dbf,.prj,.cpg,.kml,.kmz,.gpx,.csv,.tsv,.topojson"
+              @change="handleFileInput"
+            >
+            <button class="btn import-btn" @click="triggerImport" :disabled="importing">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              {{ importing ? 'Importando camada...' : 'Adicionar camada' }}
+            </button>
+            <p class="import-formats">GeoJSON · Shapefile (.zip / .shp+.dbf) · KML / KMZ · GPX · CSV · TopoJSON</p>
           </div>
 
-          <div class="group-label">
-            <span>Estado do Pará (Referência)</span>
-            <span>Temáticas</span>
-          </div>
-          <div v-for="layer in paraLayers" :key="layer.key" class="layer-card" :class="{inactive: !layer.active, 'has-error': layer.failed}">
-            <div class="layer-top">
-              <label class="layer-toggle">
-                <input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading || layer.failed">
-                <span class="layer-title-wrap">
-                  <span class="layer-title-line">
-                    <span class="geom-badge" :style="{background: layer.color + '20', color: layer.color}">
-                      <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5"/></svg>
+          <template v-for="group in layerGroups" :key="group.id">
+            <div class="group-label">
+              <span>{{ group.title }}</span>
+              <span>{{ group.badge }}</span>
+            </div>
+            <div v-for="layer in group.layers" :key="layer.key" class="layer-card" :class="{inactive: !layer.active, 'has-error': layer.failed}">
+              <div class="layer-top">
+                <label class="layer-toggle">
+                  <input type="checkbox" v-model="layer.active" @change="toggleLayer(layer)" :disabled="layer.loading || layer.failed">
+                  <span class="layer-title-wrap">
+                    <span class="layer-title-line">
+                      <span class="geom-badge" :style="{background: layer.color + '20', color: layer.color}">
+                        <svg v-if="layer.geomType === 'polygon'" width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="2,4 11,2 14,10 6,14"/></svg>
+                        <svg v-else-if="layer.geomType === 'line'" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="2,12 6,5 10,10 14,3"/></svg>
+                        <svg v-else-if="layer.geomType === 'mixed'" width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="6" height="6" rx="1"/><circle cx="11.5" cy="11.5" r="3"/></svg>
+                        <svg v-else width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5"/></svg>
+                      </span>
+                      <span>{{ layer.label }}</span>
                     </span>
-                    <span>{{ layer.label }}</span>
+                    <span class="layer-meta">{{ layer.loading ? 'Carregando...' : layer.sourceLabel }}</span>
                   </span>
-                  <span class="layer-meta">{{ layer.loading ? 'Carregando...' : layer.sourceLabel }}</span>
-                </span>
-              </label>
-              <span class="count-pill">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
-            </div>
-            <div class="layer-controls">
-              <div class="layer-btns">
-                <button class="btn subtle" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !filteredFeatures(layer).length">Enquadrar</button>
-                <button class="btn subtle" @click="openLayerTable(layer)" :disabled="!layer.count">Tabela</button>
+                </label>
+                <span class="count-pill">{{ filteredFeatures(layer).length }}/{{ layer.count }}</span>
               </div>
-              <label class="opacity-control" title="Opacidade da camada">
-                <span>Opac.</span>
-                <input type="range" min="0.15" max="1" step="0.05" v-model.number="layer.opacity" @input="updateOpacity(layer)">
-                <span class="opacity-val">{{ Math.round(layer.opacity * 100) }}%</span>
-              </label>
+              <div class="layer-controls">
+                <div class="layer-btns">
+                  <button class="btn subtle" @click="fitLayer(layer)" :disabled="!layer.leafletLayer || !filteredFeatures(layer).length">Enquadrar</button>
+                  <button class="btn subtle" @click="openLayerTable(layer)" :disabled="!layer.count">Tabela</button>
+                  <button v-if="layer.isCustom" class="btn remove-layer" @click="removeCustomLayer(layer)" title="Remover camada importada" aria-label="Remover camada">×</button>
+                </div>
+                <label class="opacity-control" title="Opacidade da camada">
+                  <span>Opac.</span>
+                  <input type="range" min="0.15" max="1" step="0.05" v-model.number="layer.opacity" @input="updateOpacity(layer)">
+                  <span class="opacity-val">{{ Math.round(layer.opacity * 100) }}%</span>
+                </label>
+              </div>
             </div>
-          </div>
+          </template>
         </template>
 
         <template v-if="activeTab === 'tools'">
@@ -1296,6 +1324,35 @@
       descricao: 'Descrição'
     };
 
+    const CUSTOM_COLORS = ['#059669', '#2563eb', '#db2777', '#ea580c', '#4f46e5', '#0d9488', '#ca8a04'];
+    const loadedScripts = new Map();
+
+    const loadScript = urls => {
+      const key = urls[0];
+      if (loadedScripts.has(key)) return loadedScripts.get(key);
+      const promise = new Promise((resolve, reject) => {
+        const tryNext = idx => {
+          if (idx >= urls.length) {
+            loadedScripts.delete(key);
+            reject(new Error('Não foi possível carregar o decodificador externo. Verifique sua conexão.'));
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = urls[idx];
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => {
+            script.remove();
+            tryNext(idx + 1);
+          };
+          document.head.appendChild(script);
+        };
+        tryNext(0);
+      });
+      loadedScripts.set(key, promise);
+      return promise;
+    };
+
     const escapeHtml = value => String(value ?? 'não informado')
       .replaceAll('&', '&amp;')
       .replaceAll('<', '&lt;')
@@ -1312,6 +1369,9 @@
           search: '',
           error: '',
           status: 'Inicializando mapa e camadas...',
+          importing: false,
+          isDraggingFile: false,
+          customColorIndex: 0,
           tool: null,
           bufferRadius: 1,
           bufferCenterLabel: '',
@@ -1336,6 +1396,17 @@
       computed: {
         rmbLayers() { return this.layers.filter(l => l.group === 'rmb'); },
         paraLayers() { return this.layers.filter(l => l.group === 'para'); },
+        customLayers() { return this.layers.filter(l => l.group === 'custom'); },
+        layerGroups() {
+          const groups = [
+            { id: 'rmb', title: 'Região Metropolitana de Belém', badge: 'Base Vetorial', layers: this.rmbLayers },
+            { id: 'para', title: 'Estado do Pará (Referência)', badge: 'Temáticas', layers: this.paraLayers }
+          ];
+          if (this.customLayers.length) {
+            groups.push({ id: 'custom', title: 'Camadas Importadas', badge: `${this.customLayers.length} camada(s)`, layers: this.customLayers });
+          }
+          return groups;
+        },
         isLoading() { return this.layers.some(l => l.loading); },
         activeLayerCount() { return this.layers.filter(l => l.active).length; },
         visibleCount() {
@@ -1503,8 +1574,17 @@
             this.selectedFeature.properties?.id === feature.properties?.id &&
             this.selectedFeature.properties?.nome === feature.properties?.nome;
         },
-        baseFeatureStyle(layer, isSelected = false) {
-          if (layer.geomType === 'line') {
+        featureGeomCategory(feature, fallback = 'point') {
+          const t = feature?.geometry?.type;
+          if (!t) return fallback;
+          if (t === 'Point' || t === 'MultiPoint') return 'point';
+          if (t === 'LineString' || t === 'MultiLineString') return 'line';
+          if (t === 'Polygon' || t === 'MultiPolygon') return 'polygon';
+          return fallback;
+        },
+        baseFeatureStyle(layer, isSelected = false, feature = null) {
+          const geom = this.featureGeomCategory(feature, layer.geomType);
+          if (geom === 'line') {
             return {
               color: isSelected ? '#f59e0b' : layer.color,
               weight: isSelected ? 6 : (this.search ? 4.5 : 3.5),
@@ -1538,15 +1618,16 @@
             { type: 'FeatureCollection', features: layer.features },
             {
               filter: feature => !this.search || visibleSet.has(feature),
-              style: feature => this.baseFeatureStyle(layer, this.isFeatureSelected(layer.key, feature)),
+              style: feature => this.baseFeatureStyle(layer, this.isFeatureSelected(layer.key, feature), feature),
               pointToLayer: (feature, latlng) => L.circleMarker(latlng, this.pointMarkerStyle(layer, this.isFeatureSelected(layer.key, feature))),
               onEachFeature: (feature, leafletFeature) => {
                 if (this.isFeatureSelected(layer.key, feature)) {
                   this.selectedLeafletTarget = leafletFeature;
                 }
                 const props = feature.properties || {};
-                const tipTitle = escapeHtml(props.nome || 'Feição');
-                const tipSub = props.categoria ? `<br><span style="opacity:.8">${escapeHtml(props.categoria)}</span>` : '';
+                const tipTitle = escapeHtml(props.nome || props.name || props.NAME || 'Feição');
+                const cat = props.categoria || props.category || props.tipo;
+                const tipSub = cat ? `<br><span style="opacity:.8">${escapeHtml(cat)}</span>` : '';
                 leafletFeature.bindTooltip(`<strong>${tipTitle}</strong>${tipSub}`, {
                   className: 'feature-tip',
                   direction: 'top',
@@ -1556,10 +1637,10 @@
                 leafletFeature.on('mouseover', () => {
                   if (this.tool) return;
                   if (leafletFeature.setStyle) {
-                    if (layer.geomType === 'point') {
+                    if (this.featureGeomCategory(feature, layer.geomType) === 'point') {
                       leafletFeature.setStyle({ radius: 9.5, weight: 2.5 });
                     } else {
-                      leafletFeature.setStyle({ weight: layer.geomType === 'line' ? 5.5 : 3.2 });
+                      leafletFeature.setStyle({ weight: this.featureGeomCategory(feature, layer.geomType) === 'line' ? 5.5 : 3.2 });
                     }
                   }
                 });
@@ -1582,10 +1663,10 @@
         applyStyleToTarget(layer, feature, target) {
           if (!target?.setStyle) return;
           const selected = this.isFeatureSelected(layer.key, feature);
-          if (layer.geomType === 'point') {
+          if (this.featureGeomCategory(feature, layer.geomType) === 'point') {
             target.setStyle(this.pointMarkerStyle(layer, selected));
           } else {
-            target.setStyle(this.baseFeatureStyle(layer, selected));
+            target.setStyle(this.baseFeatureStyle(layer, selected, feature));
           }
         },
         selectFeature(layer, feature, leafletTarget = null) {
@@ -1870,6 +1951,360 @@
             return formatted;
           }
           return String(value);
+        },
+        triggerImport() {
+          this.$refs.fileInput?.click();
+        },
+        handleFileInput(event) {
+          const files = event.target?.files;
+          if (files?.length) this.handleImportFiles(files);
+          if (event.target) event.target.value = '';
+        },
+        handleDropFiles(event) {
+          this.isDraggingFile = false;
+          const files = event.dataTransfer?.files;
+          if (files?.length) this.handleImportFiles(files);
+        },
+        detectGeomType(features) {
+          const cats = new Set(features.map(f => this.featureGeomCategory(f, '')).filter(Boolean));
+          if (!cats.size) return 'point';
+          if (cats.size === 1) return [...cats][0];
+          return 'mixed';
+        },
+        normalizeGeoJson(data, fallbackName) {
+          const rawList = Array.isArray(data) ? data : [data];
+          const collections = [];
+          for (const item of rawList) {
+            if (!item) continue;
+            let features = [];
+            if (item.type === 'FeatureCollection') {
+              features = item.features || [];
+            } else if (item.type === 'Feature') {
+              features = [item];
+            } else if (item.type && item.coordinates) {
+              features = [{ type: 'Feature', properties: { nome: fallbackName }, geometry: item }];
+            }
+            const validFeatures = features.filter(f => f && f.geometry);
+            if (validFeatures.length) {
+              collections.push({
+                name: item.fileName || item.name || fallbackName,
+                features: validFeatures
+              });
+            }
+          }
+          return collections;
+        },
+        addImportedLayer(name, features, sourceLabel) {
+          const cleanFeatures = features.map((f, index) => {
+            const props = { ...(f.properties || {}) };
+            if (!props.nome && (props.name || props.NAME || props.Nome || props.titulo)) {
+              props.nome = props.name || props.NAME || props.Nome || props.titulo;
+            }
+            if (props.id === undefined) props.id = index + 1;
+            return { ...f, properties: props };
+          });
+          const geomType = this.detectGeomType(cleanFeatures);
+          const color = CUSTOM_COLORS[this.customColorIndex % CUSTOM_COLORS.length];
+          this.customColorIndex += 1;
+
+          const layer = {
+            key: `custom_${Date.now()}_${this.customColorIndex}`,
+            group: 'custom',
+            isCustom: true,
+            geomType,
+            hasApi: false,
+            label: name,
+            color,
+            active: true,
+            loading: false,
+            failed: false,
+            count: cleanFeatures.length,
+            features: cleanFeatures,
+            leafletLayer: null,
+            opacity: geomType === 'polygon' ? 0.4 : 0.9,
+            sourceLabel
+          };
+          this.layers.push(layer);
+          this.refreshLayer(layer);
+          this.selectedLayerKey = layer.key;
+          this.fitLayer(layer);
+          this.status = `Camada "${name}" adicionada (${cleanFeatures.length} feições).`;
+        },
+        removeCustomLayer(layer) {
+          if (layer.leafletLayer) this.map.removeLayer(layer.leafletLayer);
+          if (this.selectedFeature?.layerKey === layer.key) this.clearSelection();
+          this.layers = this.layers.filter(l => l.key !== layer.key);
+          if (this.selectedLayerKey === layer.key && this.layers.length) {
+            this.selectedLayerKey = this.layers[0].key;
+          }
+          this.status = `Camada "${layer.label}" removida.`;
+        },
+        parseCoordList(coordText) {
+          return String(coordText || '')
+            .trim()
+            .split(/\s+/)
+            .map(token => {
+              const parts = token.split(',').map(Number);
+              return parts.length >= 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])
+                ? [parts[0], parts[1]]
+                : null;
+            })
+            .filter(Boolean);
+        },
+        parseKmlGeometry(node) {
+          if (!node) return null;
+          const tag = node.localName;
+          if (tag === 'Point') {
+            const coords = this.parseCoordList(node.getElementsByTagName('coordinates')[0]?.textContent);
+            return coords[0] ? { type: 'Point', coordinates: coords[0] } : null;
+          }
+          if (tag === 'LineString') {
+            const coords = this.parseCoordList(node.getElementsByTagName('coordinates')[0]?.textContent);
+            return coords.length >= 2 ? { type: 'LineString', coordinates: coords } : null;
+          }
+          if (tag === 'Polygon') {
+            const rings = [];
+            const outer = node.getElementsByTagName('outerBoundaryIs')[0]?.getElementsByTagName('coordinates')[0]?.textContent;
+            if (outer) {
+              const ring = this.parseCoordList(outer);
+              if (ring.length >= 3) rings.push(ring);
+            }
+            for (const inner of node.getElementsByTagName('innerBoundaryIs')) {
+              const txt = inner.getElementsByTagName('coordinates')[0]?.textContent;
+              const ring = this.parseCoordList(txt);
+              if (ring.length >= 3) rings.push(ring);
+            }
+            return rings.length ? { type: 'Polygon', coordinates: rings } : null;
+          }
+          if (tag === 'MultiGeometry') {
+            const geoms = [...node.children].map(child => this.parseKmlGeometry(child)).filter(Boolean);
+            if (!geoms.length) return null;
+            return geoms.length === 1 ? geoms[0] : { type: 'GeometryCollection', geometries: geoms };
+          }
+          return null;
+        },
+        parseKmlText(xmlText) {
+          const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+          const features = [];
+          for (const pm of doc.getElementsByTagName('Placemark')) {
+            const props = {};
+            const nameEl = pm.getElementsByTagName('name')[0];
+            const descEl = pm.getElementsByTagName('description')[0];
+            if (nameEl?.textContent?.trim()) props.nome = nameEl.textContent.trim();
+            if (descEl?.textContent?.trim()) props.descricao = descEl.textContent.replace(/<[^>]*>/g, ' ').trim();
+            for (const data of pm.getElementsByTagName('Data')) {
+              const key = data.getAttribute('name');
+              const val = data.getElementsByTagName('value')[0]?.textContent?.trim();
+              if (key && val !== undefined) props[key] = val;
+            }
+            for (const sdata of pm.getElementsByTagName('SimpleData')) {
+              const key = sdata.getAttribute('name');
+              const val = sdata.textContent?.trim();
+              if (key && val !== undefined) props[key] = val;
+            }
+            let geometry = null;
+            for (const child of pm.children) {
+              if (['Point', 'LineString', 'Polygon', 'MultiGeometry'].includes(child.localName)) {
+                geometry = this.parseKmlGeometry(child);
+                if (geometry) break;
+              }
+            }
+            if (geometry) features.push({ type: 'Feature', properties: props, geometry });
+          }
+          return { type: 'FeatureCollection', features };
+        },
+        parseGpxText(xmlText) {
+          const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+          const features = [];
+          for (const wpt of doc.getElementsByTagName('wpt')) {
+            const lat = Number(wpt.getAttribute('lat'));
+            const lon = Number(wpt.getAttribute('lon'));
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+            const props = { categoria: 'Waypoint GPX' };
+            const name = wpt.getElementsByTagName('name')[0]?.textContent?.trim();
+            const desc = wpt.getElementsByTagName('desc')[0]?.textContent?.trim();
+            const ele = wpt.getElementsByTagName('ele')[0]?.textContent?.trim();
+            if (name) props.nome = name;
+            if (desc) props.descricao = desc;
+            if (ele && Number.isFinite(Number(ele))) props.elevacao_m = Number(ele);
+            features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
+          }
+          for (const trk of doc.getElementsByTagName('trk')) {
+            const props = { categoria: 'Trilha GPX' };
+            const name = trk.getElementsByTagName('name')[0]?.textContent?.trim();
+            const desc = trk.getElementsByTagName('desc')[0]?.textContent?.trim();
+            if (name) props.nome = name;
+            if (desc) props.descricao = desc;
+            const segments = [];
+            for (const seg of trk.getElementsByTagName('trkseg')) {
+              const pts = [...seg.getElementsByTagName('trkpt')]
+                .map(p => [Number(p.getAttribute('lon')), Number(p.getAttribute('lat'))])
+                .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
+              if (pts.length >= 2) segments.push(pts);
+            }
+            if (segments.length === 1) {
+              features.push({ type: 'Feature', properties: props, geometry: { type: 'LineString', coordinates: segments[0] } });
+            } else if (segments.length > 1) {
+              features.push({ type: 'Feature', properties: props, geometry: { type: 'MultiLineString', coordinates: segments } });
+            }
+          }
+          for (const rte of doc.getElementsByTagName('rte')) {
+            const props = { categoria: 'Rota GPX' };
+            const name = rte.getElementsByTagName('name')[0]?.textContent?.trim();
+            if (name) props.nome = name;
+            const pts = [...rte.getElementsByTagName('rtept')]
+              .map(p => [Number(p.getAttribute('lon')), Number(p.getAttribute('lat'))])
+              .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
+            if (pts.length >= 2) {
+              features.push({ type: 'Feature', properties: props, geometry: { type: 'LineString', coordinates: pts } });
+            }
+          }
+          return { type: 'FeatureCollection', features };
+        },
+        parseCsvLine(line, delimiter) {
+          const out = [];
+          let current = '';
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i += 1) {
+            const ch = line[i];
+            if (ch === '"') {
+              if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i += 1;
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (ch === delimiter && !inQuotes) {
+              out.push(current.trim());
+              current = '';
+            } else {
+              current += ch;
+            }
+          }
+          out.push(current.trim());
+          return out;
+        },
+        parseCsvToGeoJson(text) {
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (lines.length < 2) throw new Error('O arquivo CSV precisa ter cabeçalho e ao menos uma linha.');
+          const headerLine = lines[0];
+          const delimiter = headerLine.includes('\t') ? '\t' : (headerLine.split(';').length > headerLine.split(',').length ? ';' : ',');
+          const headers = this.parseCsvLine(headerLine, delimiter);
+          const lower = headers.map(h => h.toLowerCase().trim());
+          const latIdx = lower.findIndex(h => ['lat', 'latitude', 'y', 'lat_dd'].includes(h));
+          const lonIdx = lower.findIndex(h => ['lon', 'lng', 'long', 'longitude', 'x', 'lon_dd'].includes(h));
+          if (latIdx === -1 || lonIdx === -1) {
+            throw new Error('Colunas de coordenadas não encontradas no CSV (use lat/latitude e lon/lng/longitude).');
+          }
+          const features = [];
+          for (let i = 1; i < lines.length; i += 1) {
+            const cols = this.parseCsvLine(lines[i], delimiter);
+            const lat = Number(String(cols[latIdx] ?? '').replace(',', '.'));
+            const lon = Number(String(cols[lonIdx] ?? '').replace(',', '.'));
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+            const props = {};
+            headers.forEach((h, idx) => {
+              if (idx !== latIdx && idx !== lonIdx && cols[idx] !== undefined && cols[idx] !== '') {
+                const num = Number(cols[idx]);
+                props[h] = !Number.isNaN(num) && cols[idx] !== '' ? num : cols[idx];
+              }
+            });
+            features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
+          }
+          return { type: 'FeatureCollection', features };
+        },
+        async handleImportFiles(fileList) {
+          const files = [...fileList];
+          if (!files.length) return;
+          this.importing = true;
+          this.error = '';
+
+          try {
+            const shpFiles = files.filter(f => /\.(shp|dbf|prj|cpg|shx)$/i.test(f.name));
+            const otherFiles = files.filter(f => !/\.(shp|dbf|prj|cpg|shx)$/i.test(f.name));
+
+            if (shpFiles.length) {
+              const hasShp = shpFiles.some(f => /\.shp$/i.test(f.name));
+              if (!hasShp) {
+                throw new Error('Selecione o arquivo .shp (opcionalmente junto com .dbf e .prj).');
+              }
+              await Promise.all([
+                loadScript(['https://unpkg.com/jszip@3.10.1/dist/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js']),
+                loadScript(['https://unpkg.com/shpjs@4.0.4/dist/shp.min.js', 'https://cdn.jsdelivr.net/npm/shpjs@4.0.4/dist/shp.min.js'])
+              ]);
+              const groups = new Map();
+              for (const file of shpFiles) {
+                const stem = file.name.replace(/\.[^.]+$/, '');
+                if (!groups.has(stem)) groups.set(stem, []);
+                groups.get(stem).push(file);
+              }
+              for (const [stem, groupFiles] of groups.entries()) {
+                const zip = new window.JSZip();
+                for (const f of groupFiles) zip.file(f.name, await f.arrayBuffer());
+                const zipBuffer = await zip.generateAsync({ type: 'arraybuffer' });
+                const parsed = await window.shp(zipBuffer);
+                const collections = this.normalizeGeoJson(parsed, stem);
+                if (!collections.length) throw new Error(`Nenhuma feição encontrada em ${stem}.shp.`);
+                collections.forEach(col => this.addImportedLayer(col.name, col.features, 'Shapefile importado'));
+              }
+            }
+
+            for (const file of otherFiles) {
+              const ext = file.name.split('.').pop().toLowerCase();
+              const baseName = file.name.replace(/\.[^.]+$/, '');
+
+              if (ext === 'zip') {
+                await loadScript(['https://unpkg.com/shpjs@4.0.4/dist/shp.min.js', 'https://cdn.jsdelivr.net/npm/shpjs@4.0.4/dist/shp.min.js']);
+                const parsed = await window.shp(await file.arrayBuffer());
+                const collections = this.normalizeGeoJson(parsed, baseName);
+                if (!collections.length) throw new Error(`Nenhuma feição vetorial válida encontrada em ${file.name}.`);
+                collections.forEach(col => this.addImportedLayer(col.name, col.features, 'Shapefile (.zip)'));
+              } else if (ext === 'geojson' || ext === 'json' || ext === 'topojson') {
+                const parsed = JSON.parse(await file.text());
+                if (parsed.type === 'Topology') {
+                  await loadScript(['https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js', 'https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js']);
+                  const objectKeys = Object.keys(parsed.objects || {});
+                  if (!objectKeys.length) throw new Error('TopoJSON sem objetos.');
+                  objectKeys.forEach(objKey => {
+                    const geo = window.topojson.feature(parsed, parsed.objects[objKey]);
+                    const collections = this.normalizeGeoJson(geo, objectKeys.length > 1 ? `${baseName} · ${objKey}` : baseName);
+                    collections.forEach(col => this.addImportedLayer(col.name, col.features, 'TopoJSON importado'));
+                  });
+                } else {
+                  const collections = this.normalizeGeoJson(parsed, baseName);
+                  if (!collections.length) throw new Error(`Nenhuma feição válida encontrada em ${file.name}.`);
+                  collections.forEach(col => this.addImportedLayer(col.name, col.features, 'GeoJSON importado'));
+                }
+              } else if (ext === 'kml') {
+                const geo = this.parseKmlText(await file.text());
+                if (!geo.features.length) throw new Error(`Nenhuma feição válida encontrada em ${file.name}.`);
+                this.addImportedLayer(baseName, geo.features, 'KML importado');
+              } else if (ext === 'kmz') {
+                await loadScript(['https://unpkg.com/jszip@3.10.1/dist/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js']);
+                const zip = await window.JSZip.loadAsync(await file.arrayBuffer());
+                const kmlFile = Object.values(zip.files).find(f => !f.dir && /\.kml$/i.test(f.name));
+                if (!kmlFile) throw new Error(`Nenhum arquivo KML encontrado dentro de ${file.name}.`);
+                const geo = this.parseKmlText(await kmlFile.async('text'));
+                if (!geo.features.length) throw new Error(`Nenhuma feição válida encontrada em ${file.name}.`);
+                this.addImportedLayer(baseName, geo.features, 'KMZ importado');
+              } else if (ext === 'gpx') {
+                const geo = this.parseGpxText(await file.text());
+                if (!geo.features.length) throw new Error(`Nenhuma feição válida encontrada em ${file.name}.`);
+                this.addImportedLayer(baseName, geo.features, 'GPX importado');
+              } else if (ext === 'csv' || ext === 'tsv') {
+                const geo = this.parseCsvToGeoJson(await file.text());
+                if (!geo.features.length) throw new Error(`Nenhuma coordenada válida encontrada em ${file.name}.`);
+                this.addImportedLayer(baseName, geo.features, 'CSV importado');
+              } else {
+                throw new Error(`Formato não suportado: .${ext}`);
+              }
+            }
+          } catch (importError) {
+            this.error = `Falha ao importar camada: ${importError.message}`;
+            this.status = 'Erro na importação da camada.';
+          } finally {
+            this.importing = false;
+          }
         }
       }
     }).mount('#app');
